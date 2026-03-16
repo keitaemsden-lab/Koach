@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties ─────────────────────────────────────────────── */
+
+:root {
+  --bg-app:         #f1f5f9;
+  --bg-toolbar:     #ffffff;
+  --bg-panel:       #ffffff;
+  --border:         #e2e8f0;
+  --text-primary:   #0f172a;
+  --text-secondary: #64748b;
+  --accent:         #2563eb;
+  --pitch-fill:     #16a34a;
+  --pitch-lines:    #ffffff;
+  --pitch-alt:      #15803d;
+}
+
+.dark {
+  --bg-app:         #0f172a;
+  --bg-toolbar:     #1e293b;
+  --bg-panel:       #1e293b;
+  --border:         #334155;
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --accent:         #3b82f6;
+  --pitch-fill:     #14532d;
+  --pitch-lines:    rgba(255, 255, 255, 0.85);
+  --pitch-alt:      #166534;
+}
+
+/* ─── Base Styles ────────────────────────────────────────────────────────── */
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'DM Mono', 'Space Mono', monospace;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
+@keyframes modal-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
