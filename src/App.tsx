@@ -53,24 +53,12 @@ export default function App() {
     >
       <Header />
 
-      {/* Desktop toolbar */}
-      <div className="hidden md:block flex-shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
-        <Toolbar boardRef={boardRef} />
-      </div>
-
-      {/* Main content */}
-      <main className="flex flex-1 overflow-hidden">
+      {/* Main content — Toolbar floats as an absolute pill inside this area */}
+      <main className="relative flex flex-1 overflow-hidden">
         <BoardCanvas boardRef={boardRef} />
         <NotesPanel />
-      </main>
-
-      {/* Mobile bottom toolbar */}
-      <div
-        className="md:hidden flex-shrink-0"
-        style={{ borderTop: '1px solid var(--border)' }}
-      >
         <Toolbar boardRef={boardRef} />
-      </div>
+      </main>
 
       <SaveLoadModal />
     </div>
