@@ -23,14 +23,20 @@ export default function FormationPicker() {
       <select
         value={activeFormation ?? ''}
         onChange={(e) => handleSelect(e.target.value as FormationName)}
-        className="rounded px-2 py-1 text-xs font-medium"
+        className=""
         style={{
           height: 36,
-          background: 'var(--bg-app)',
-          border: '1px solid var(--border)',
-          color: 'var(--text-primary)',
-          fontFamily: 'DM Mono, monospace',
+          padding: '0 8px',
+          background: 'transparent',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 8,
+          color: 'rgba(255,255,255,0.7)',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: 12,
+          fontWeight: 500,
           cursor: 'pointer',
+          outline: 'none',
+          appearance: 'auto',
         }}
         title="Load formation"
       >
