@@ -36,9 +36,9 @@ const PitchSVG = memo(function PitchSVG() {
   return (
     <g>
       <defs>
-        <pattern id="pitch-stripes" x="0" y="0" width="680" height="40" patternUnits="userSpaceOnUse">
-          <rect x="0" y="0" width="680" height="20" fill="var(--pitch-fill)" />
-          <rect x="0" y="20" width="680" height="20" fill="var(--pitch-alt)" />
+        <pattern id="pitch-stripes" x="0" y="0" width="680" height="64" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="680" height="32" fill="var(--pitch-fill)" />
+          <rect x="0" y="32" width="680" height="32" fill="var(--pitch-alt)" />
         </pattern>
       </defs>
 
