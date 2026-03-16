@@ -6,16 +6,16 @@ export default function Header() {
     <header
       className="flex items-center justify-between px-4 flex-shrink-0"
       style={{
-        height: 48,
-        backgroundColor: 'var(--bg-toolbar)',
+        height: 44,
+        backgroundColor: 'var(--bg-surface)',
         borderBottom: '1px solid var(--border)',
       }}
     >
       <span
-        className="font-medium tracking-widest uppercase select-none"
-        style={{ fontSize: 13, fontFamily: 'DM Mono, monospace', color: 'var(--text-primary)' }}
+        className="font-semibold tracking-widest uppercase select-none"
+        style={{ fontSize: 13, fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)', letterSpacing: '0.12em' }}
       >
-        Tactic Board
+        Koach
       </span>
       <div className="flex items-center gap-1">
         <ShareButton />
