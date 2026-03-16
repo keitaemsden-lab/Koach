@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core'
 import type { Player, Mode } from '@/store/types'
+import { lightenColour } from '@/utils/colour'
 
 interface PlayerTokenProps {
   player: Player
@@ -45,23 +46,38 @@ export default function PlayerToken({
       {...attributes}
       {...(mode === 'select' ? listeners : {})}
     >
-      {/* Selection ring */}
-      {isSelected && (
-        <circle
-          r={21}
-          fill="none"
-          stroke="white"
-          strokeWidth={2.5}
-          strokeDasharray="4 3"
-          opacity={0.9}
-        />
-      )}
-      {/* Body */}
-      <circle r={16} fill={colour} stroke="white" strokeWidth={2} />
+      {/* Per-token SVG defs — IDs namespaced to prevent DOM collisions across 22 tokens */}
+      <defs>
+        <radialGradient id={`grad-${player.id}`} cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor={lightenColour(colour, 0.25)} />
+          <stop offset="100%" stopColor={colour} />
+        </radialGradient>
+        <filter id={`shadow-${player.id}`} x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.4" />
+        </filter>
+        <filter id={`glow-${player.id}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={colour} floodOpacity="0.85" />
+        </filter>
+      </defs>
+
+      {/* Token body — stroke is unconditional; selection is communicated via glow filter only.
+          Drag shadow is handled by the <g> style above — no isDragging branch needed here. */}
+      <circle
+        r={16}
+        fill={`url(#grad-${player.id})`}
+        stroke="rgba(255,255,255,0.6)"
+        strokeWidth={1.5}
+        filter={isSelected ? `url(#glow-${player.id})` : `url(#shadow-${player.id})`}
+      />
+
+      {/* Inner shimmer ring */}
+      <circle r={12} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+
       {/* Position label */}
       <text
-        fontSize={10}
-        fontWeight="bold"
+        fontSize={11}
+        fontWeight={800}
+        fontFamily="Inter, sans-serif"
         fill="white"
         textAnchor="middle"
         dominantBaseline="central"
@@ -69,11 +85,14 @@ export default function PlayerToken({
       >
         {player.position}
       </text>
+
       {/* Player name */}
       <text
         y={25}
         fontSize={9}
-        fill="white"
+        fontWeight={500}
+        fontFamily="Inter, sans-serif"
+        fill="rgba(255,255,255,0.9)"
         textAnchor="middle"
         dominantBaseline="hanging"
         style={{ pointerEvents: 'none', userSelect: 'none' }}
