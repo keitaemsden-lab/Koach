@@ -1,5 +1,14 @@
 import { useBoardStore } from '@/store/boardStore'
 
+const swatchStyle = (colour: string): React.CSSProperties => ({
+  width: 20,
+  height: 20,
+  borderRadius: '50%',
+  border: '2px solid rgba(255,255,255,0.4)',
+  cursor: 'pointer',
+  background: colour,
+})
+
 export default function TeamColourPicker() {
   const homeColour    = useBoardStore((s) => s.homeColour)
   const awayColour    = useBoardStore((s) => s.awayColour)
@@ -11,8 +20,8 @@ export default function TeamColourPicker() {
       <label title="Home team colour" className="relative" style={{ cursor: 'pointer' }}>
         <span className="text-xs mr-1" style={{ color: 'var(--text-secondary)', fontFamily: 'DM Mono, monospace' }}>H</span>
         <span
-          className="inline-block rounded-full border-2 border-white/30"
-          style={{ width: 20, height: 20, background: homeColour, verticalAlign: 'middle' }}
+          className="inline-block"
+          style={{ ...swatchStyle(homeColour), verticalAlign: 'middle' }}
         />
         <input
           type="color"
@@ -25,8 +34,8 @@ export default function TeamColourPicker() {
       <label title="Away team colour" className="relative" style={{ cursor: 'pointer' }}>
         <span className="text-xs mr-1" style={{ color: 'var(--text-secondary)', fontFamily: 'DM Mono, monospace' }}>A</span>
         <span
-          className="inline-block rounded-full border-2 border-white/30"
-          style={{ width: 20, height: 20, background: awayColour, verticalAlign: 'middle' }}
+          className="inline-block"
+          style={{ ...swatchStyle(awayColour), verticalAlign: 'middle' }}
         />
         <input
           type="color"
