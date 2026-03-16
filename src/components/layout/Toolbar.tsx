@@ -55,6 +55,7 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
           className="flex items-center justify-center rounded-lg transition-colors duration-150"
           style={{
             width: 36, height: 36,
+            minWidth: 44, minHeight: 44,
             background: isNotesPanelOpen ? 'var(--accent)' : 'transparent',
             color: isNotesPanelOpen ? 'white' : 'rgba(255,255,255,0.55)',
             cursor: 'pointer',
@@ -73,8 +74,9 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
           className="flex items-center justify-center rounded-lg transition-colors duration-150"
           style={{
             width: 36, height: 36,
-            background: false ? 'var(--accent)' : 'transparent',
-            color: false ? 'white' : 'rgba(255,255,255,0.55)',
+            minWidth: 44, minHeight: 44,
+            background: 'transparent',
+            color: 'rgba(255,255,255,0.55)',
             cursor: 'pointer',
             borderRadius: 8,
             transition: 'background 150ms ease, color 150ms ease',
