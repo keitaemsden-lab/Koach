@@ -57,3 +57,31 @@ body {
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
 }
+
+/* Toolbar pill */
+.toolbar-pill {
+  background: rgba(15, 23, 36, 0.82);
+}
+
+.dark .toolbar-pill {
+  background: #1c2333;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .toolbar-pill {
+    background: rgba(15, 23, 36, 0.96);
+  }
+}
+
+/* Mobile pill — < 768px */
+@media (max-width: 767px) {
+  .toolbar-pill {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    border-radius: 16px;
+    overflow-x: auto;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+}

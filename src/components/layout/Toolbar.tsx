@@ -1,4 +1,5 @@
 import type { RefObject } from 'react'
+import { NoteBlank, FloppyDisk } from '@phosphor-icons/react'
 import ModeToggle from '@/components/toolbar/ModeToggle'
 import ArrowTypePicker from '@/components/toolbar/ArrowTypePicker'
 import FormationPicker from '@/components/toolbar/FormationPicker'
@@ -18,25 +19,30 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
 
   return (
     <div
-      className="flex items-center gap-2 px-3 overflow-x-auto flex-shrink-0"
+      className="toolbar-pill absolute z-10 left-1/2 -translate-x-1/2 bottom-5 flex items-center gap-1.5 px-3"
       style={{
-        height: 52,
-        backgroundColor: 'var(--bg-toolbar)',
+        height: 48,
+        borderRadius: 999,
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.24)',
+        background: 'rgba(15, 23, 36, 0.82)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
       }}
     >
       <ModeToggle />
 
-      <div className="w-px self-stretch my-1.5" style={{ background: 'var(--border)' }} />
+      <div className="w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       <ArrowTypePicker />
 
       <FormationPicker />
 
-      <div className="w-px self-stretch my-1.5" style={{ background: 'var(--border)' }} />
+      <div className="w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       <TeamColourPicker />
 
-      <div className="w-px self-stretch my-1.5" style={{ background: 'var(--border)' }} />
+      <div className="w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       <UndoRedoButtons />
 
@@ -50,17 +56,13 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
           style={{
             width: 36, height: 36,
             background: isNotesPanelOpen ? 'var(--accent)' : 'transparent',
-            color: isNotesPanelOpen ? 'white' : 'var(--text-secondary)',
+            color: isNotesPanelOpen ? 'white' : 'rgba(255,255,255,0.55)',
             cursor: 'pointer',
+            borderRadius: 8,
+            transition: 'background 150ms ease, color 150ms ease',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-            <polyline points="10 9 9 9 8 9" />
-          </svg>
+          <NoteBlank size={18} weight="light" />
         </button>
 
         {/* Save/Load */}
@@ -71,16 +73,14 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
           className="flex items-center justify-center rounded-lg transition-colors duration-150"
           style={{
             width: 36, height: 36,
-            background: 'transparent',
-            color: 'var(--text-secondary)',
+            background: false ? 'var(--accent)' : 'transparent',
+            color: false ? 'white' : 'rgba(255,255,255,0.55)',
             cursor: 'pointer',
+            borderRadius: 8,
+            transition: 'background 150ms ease, color 150ms ease',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-            <polyline points="17 21 17 13 7 13 7 21" />
-            <polyline points="7 3 7 8 15 8" />
-          </svg>
+          <FloppyDisk size={18} weight="light" />
         </button>
 
         <ExportButton boardRef={boardRef} />
