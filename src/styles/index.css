@@ -5,29 +5,31 @@
 /* ─── CSS Custom Properties ─────────────────────────────────────────────── */
 
 :root {
-  --bg-app:         #f1f5f9;
-  --bg-toolbar:     #ffffff;
-  --bg-panel:       #ffffff;
-  --border:         #e2e8f0;
+  --bg-app:         #f0f2f5;
+  --bg-surface:     #ffffff;
+  --bg-toolbar:     var(--bg-surface);
+  --bg-panel:       var(--bg-surface);
+  --border:         #e4e7ec;
   --text-primary:   #0f172a;
-  --text-secondary: #64748b;
+  --text-secondary: #6b7280;
   --accent:         #2563eb;
-  --pitch-fill:     #16a34a;
-  --pitch-lines:    #ffffff;
-  --pitch-alt:      #15803d;
+  --pitch-fill:     #3d6b52;
+  --pitch-alt:      #446059;
+  --pitch-lines:    rgba(255, 255, 255, 0.92);
 }
 
 .dark {
-  --bg-app:         #0f172a;
-  --bg-toolbar:     #1e293b;
-  --bg-panel:       #1e293b;
-  --border:         #334155;
+  --bg-app:         #141920;
+  --bg-surface:     #1c2333;
+  --bg-toolbar:     var(--bg-surface);
+  --bg-panel:       var(--bg-surface);
+  --border:         #2d3748;
   --text-primary:   #f1f5f9;
-  --text-secondary: #94a3b8;
+  --text-secondary: #8899aa;
   --accent:         #3b82f6;
-  --pitch-fill:     #14532d;
-  --pitch-lines:    rgba(255, 255, 255, 0.85);
-  --pitch-alt:      #166534;
+  --pitch-fill:     #2a5240;
+  --pitch-alt:      #2f5c49;
+  --pitch-lines:    rgba(255, 255, 255, 0.88);
 }
 
 /* ─── Base Styles ────────────────────────────────────────────────────────── */
@@ -35,7 +37,7 @@
 body {
   background-color: var(--bg-app);
   color: var(--text-primary);
-  font-family: 'DM Mono', 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 0;
 }
