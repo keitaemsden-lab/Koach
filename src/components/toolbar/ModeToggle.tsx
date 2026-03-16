@@ -1,26 +1,45 @@
+import { CursorClick, PencilSimple } from '@phosphor-icons/react'
 import { useBoardStore } from '@/store/boardStore'
 
 export default function ModeToggle() {
   const mode    = useBoardStore((s) => s.mode)
   const setMode = useBoardStore((s) => s.setMode)
 
+  const buttonStyle = (isActive: boolean): React.CSSProperties => ({
+    padding: '4px 12px',
+    borderRadius: 999,
+    background: isActive ? 'var(--accent)' : 'transparent',
+    color: isActive ? 'white' : 'rgba(255,255,255,0.55)',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontWeight: 500,
+    fontFamily: 'Inter, sans-serif',
+    transition: 'background 150ms ease, color 150ms ease',
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 36,
+  })
+
   return (
-    <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-      {(['select', 'draw-arrow'] as const).map((m) => (
-        <button
-          key={m}
-          title={m === 'select' ? 'Select / Move (S)' : 'Draw Arrow (D)'}
-          onClick={() => setMode(m)}
-          className="px-3 py-1 text-xs font-medium transition-colors duration-150"
-          style={{
-            minWidth: 44, minHeight: 36,
-            background: mode === m ? 'var(--accent)' : 'transparent',
-            color: mode === m ? 'white' : 'var(--text-secondary)',
-          }}
-        >
-          {m === 'select' ? 'Select' : 'Draw'}
-        </button>
-      ))}
+    <div className="flex items-center gap-0.5">
+      <button
+        title="Select / Move (S)"
+        onClick={() => setMode('select')}
+        style={buttonStyle(mode === 'select')}
+      >
+        <CursorClick size={18} weight="light" />
+        Select
+      </button>
+      <button
+        title="Draw Arrow (D)"
+        onClick={() => setMode('draw-arrow')}
+        style={buttonStyle(mode === 'draw-arrow')}
+      >
+        <PencilSimple size={18} weight="light" />
+        Draw
+      </button>
     </div>
   )
 }
