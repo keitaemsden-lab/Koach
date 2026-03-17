@@ -13,9 +13,10 @@ const POSITIONS: PositionLabel[] = [
 interface PlayerEditPopoverProps {
   player: Player
   svgRef: React.RefObject<SVGSVGElement | null>
+  onClose: () => void
 }
 
-export default function PlayerEditPopover({ player, svgRef }: PlayerEditPopoverProps) {
+export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEditPopoverProps) {
   const updatePlayer = useBoardStore((s) => s.updatePlayer)
   const removePlayer = useBoardStore((s) => s.removePlayer)
   const selectPlayer = useBoardStore((s) => s.selectPlayer)
@@ -36,6 +37,7 @@ export default function PlayerEditPopover({ player, svgRef }: PlayerEditPopoverP
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         applyChanges()
         selectPlayer(null)
+        onClose()
       }
     }
     document.addEventListener('mousedown', handler)
@@ -90,8 +92,8 @@ export default function PlayerEditPopover({ player, svgRef }: PlayerEditPopoverP
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') { applyChanges(); selectPlayer(null) }
-            if (e.key === 'Escape') selectPlayer(null)
+            if (e.key === 'Enter') { applyChanges(); selectPlayer(null); onClose() }
+            if (e.key === 'Escape') { selectPlayer(null); onClose() }
             e.stopPropagation()
           }}
           autoFocus
@@ -120,7 +122,7 @@ export default function PlayerEditPopover({ player, svgRef }: PlayerEditPopoverP
       <button
         className="w-full rounded py-1 text-xs font-medium"
         style={{ background: '#dc2626', color: 'white' }}
-        onClick={() => { removePlayer(player.id); selectPlayer(null) }}
+        onClick={() => { removePlayer(player.id); selectPlayer(null); onClose() }}
       >
         Remove
       </button>

@@ -3,9 +3,10 @@ import PlayerToken from './PlayerToken'
 
 interface PlayerLayerProps {
   svgRef: React.RefObject<SVGSVGElement | null>
+  onEditPlayer: (id: string) => void
 }
 
-export default function PlayerLayer({ svgRef }: PlayerLayerProps) {
+export default function PlayerLayer({ svgRef, onEditPlayer }: PlayerLayerProps) {
   const players        = useBoardStore((s) => s.players)
   const homeColour     = useBoardStore((s) => s.homeColour)
   const awayColour     = useBoardStore((s) => s.awayColour)
@@ -23,6 +24,7 @@ export default function PlayerLayer({ svgRef }: PlayerLayerProps) {
           isSelected={player.id === selectedPlayerId}
           svgRef={svgRef}
           onSelect={() => selectPlayer(player.id)}
+          onEdit={() => onEditPlayer(player.id)}
           mode={mode}
         />
       ))}

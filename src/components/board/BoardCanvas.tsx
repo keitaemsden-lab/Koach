@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useState } from 'react'
 import {
   DndContext, type DragEndEvent,
   PointerSensor, TouchSensor,
@@ -22,8 +22,17 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
   const selectPlayer   = useBoardStore((s) => s.selectPlayer)
   const selectArrow    = useBoardStore((s) => s.selectArrow)
   const players        = useBoardStore((s) => s.players)
-  const selectedPlayerId = useBoardStore((s) => s.selectedPlayerId)
-  const selectedPlayer = players.find((p) => p.id === selectedPlayerId) ?? null
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null)
+  const selectedPlayer = players.find((p) => p.id === editingPlayerId) ?? null
+
+  const openPlayerEditor = useCallback((id: string) => {
+    selectPlayer(id)
+    setEditingPlayerId(id)
+  }, [selectPlayer])
+
+  const closePlayerEditor = useCallback(() => {
+    setEditingPlayerId(null)
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -52,7 +61,7 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
     <div
       className="relative flex items-center justify-center w-full h-full"
       style={{ overflow: 'hidden', padding: '12px 8px' }}
-      onClick={() => { selectPlayer(null); selectArrow(null) }}
+      onClick={() => { selectPlayer(null); selectArrow(null); closePlayerEditor() }}
     >
       <div
         ref={boardRef}
@@ -67,7 +76,7 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
           >
             <PitchSVG />
             <ArrowLayer svgRef={svgRef} />
-            <PlayerLayer svgRef={svgRef} />
+            <PlayerLayer svgRef={svgRef} onEditPlayer={openPlayerEditor} />
             <DrawingOverlay svgRef={svgRef} />
           </svg>
         </DndContext>
@@ -76,6 +85,7 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
           <PlayerEditPopover
             player={selectedPlayer}
             svgRef={svgRef}
+            onClose={closePlayerEditor}
           />
         )}
       </div>

@@ -1,4 +1,5 @@
 import { useDraggable } from '@dnd-kit/core'
+import { useRef } from 'react'
 import type { Player, Mode } from '@/store/types'
 import { lightenColour } from '@/utils/colour'
 
@@ -7,12 +8,13 @@ interface PlayerTokenProps {
   colour: string
   isSelected: boolean
   onSelect: () => void
+  onEdit: () => void
   svgRef: React.RefObject<SVGSVGElement | null>
   mode: Mode
 }
 
 export default function PlayerToken({
-  player, colour, isSelected, onSelect, svgRef, mode,
+  player, colour, isSelected, onSelect, onEdit, svgRef, mode,
 }: PlayerTokenProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: player.id,
@@ -28,6 +30,17 @@ export default function PlayerToken({
   const dy = transform ? transform.y * scaleY : 0
 
   const shortName = player.name.length > 8 ? player.name.slice(0, 7) + '…' : player.name
+  const lastTouchTapTs = useRef(0)
+
+  function maybeHandleDoubleTap(e: React.PointerEvent<SVGGElement>) {
+    if (e.pointerType !== 'touch' || mode === 'draw-arrow' || isDragging) return
+    const now = Date.now()
+    if (now - lastTouchTapTs.current < 320) {
+      e.stopPropagation()
+      onEdit()
+    }
+    lastTouchTapTs.current = now
+  }
 
   return (
     <g
@@ -43,6 +56,12 @@ export default function PlayerToken({
         e.stopPropagation()
         onSelect()
       }}
+      onDoubleClick={(e) => {
+        if (mode === 'draw-arrow') return
+        e.stopPropagation()
+        onEdit()
+      }}
+      onPointerUp={maybeHandleDoubleTap}
       {...attributes}
       {...(mode === 'select' ? listeners : {})}
     >
