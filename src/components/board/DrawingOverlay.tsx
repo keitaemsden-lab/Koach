@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useBoardStore } from '@/store/boardStore'
 import { midpoint } from '@/utils/arrowPaths'
 import { straightArrowPath, curvedArrowPath } from '@/utils/arrowPaths'
@@ -17,6 +17,11 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
   const addArrow        = useBoardStore((s) => s.addArrow)
   const setDrawingState = useBoardStore((s) => s.setDrawingState)
   const selectArrow     = useBoardStore((s) => s.selectArrow)
+  const arrows          = useBoardStore((s) => s.arrows)
+  const updateArrowControl = useBoardStore((s) => s.updateArrowControl)
+
+  const draggingArrowId = useRef<string | null>(null)
+  const [pendingCurveAdjustId, setPendingCurveAdjustId] = useState<string | null>(null)
 
   const toSVG = useCallback((clientX: number, clientY: number): Point => {
     const svg = svgRef.current
@@ -56,10 +61,29 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
     if (arrowStyle === 'curved') {
       const arrows = useBoardStore.getState().arrows
       const newId = arrows[arrows.length - 1]?.id
-      if (newId) selectArrow(newId)
+      if (newId) {
+        selectArrow(newId)
+        setPendingCurveAdjustId(newId)
+      }
     }
     setDrawingState(null)
   }, [mode, drawingState, arrowType, arrowStyle, homeColour, addArrow, setDrawingState, selectArrow, toSVG])
+
+  const onControlPointerDown = useCallback((e: React.PointerEvent, arrowId: string) => {
+    e.stopPropagation()
+    draggingArrowId.current = arrowId
+    ;(e.currentTarget as SVGElement).setPointerCapture(e.pointerId)
+  }, [])
+
+  const onControlPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!draggingArrowId.current) return
+    updateArrowControl(draggingArrowId.current, toSVG(e.clientX, e.clientY))
+  }, [updateArrowControl, toSVG])
+
+  const onControlPointerUp = useCallback(() => {
+    draggingArrowId.current = null
+    setPendingCurveAdjustId(null)
+  }, [])
 
   if (mode !== 'draw-arrow') return null
 
@@ -68,6 +92,14 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
     ? arrowStyle === 'curved' && drawingState.control
       ? curvedArrowPath(drawingState.start, drawingState.currentPointer, drawingState.control)
       : straightArrowPath(drawingState.start, drawingState.currentPointer)
+    : null
+
+  const pendingCurvedArrow = pendingCurveAdjustId
+    ? arrows.find((arrow) => arrow.id === pendingCurveAdjustId && arrow.style === 'curved')
+    : null
+
+  const pendingControlPoint = pendingCurvedArrow
+    ? (pendingCurvedArrow.control ?? midpoint(pendingCurvedArrow.start, pendingCurvedArrow.end))
     : null
 
   return (
@@ -97,6 +129,21 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
           fill="none"
           opacity={0.6}
           style={{ pointerEvents: 'none' }}
+        />
+      )}
+
+      {pendingControlPoint && pendingCurvedArrow && (
+        <circle
+          cx={pendingControlPoint.x}
+          cy={pendingControlPoint.y}
+          r={7}
+          fill="var(--accent)"
+          stroke="white"
+          strokeWidth={2}
+          style={{ cursor: 'grab', touchAction: 'none' }}
+          onPointerDown={(e) => onControlPointerDown(e, pendingCurvedArrow.id)}
+          onPointerMove={onControlPointerMove}
+          onPointerUp={onControlPointerUp}
         />
       )}
     </g>
