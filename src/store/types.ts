@@ -171,6 +171,10 @@ export type BoardActions = {
   exportState: () => string
   importState: (encoded: string) => void
 
+  // Clear
+  clearArrows: () => void
+  clearBoard: () => void
+
   // Orientation
   togglePitchOrientation: () => void
 

@@ -9,6 +9,8 @@ export default function SaveLoadModal() {
   const loadFromLocal    = useBoardStore((s) => s.loadFromLocalStorage)
   const deleteSave       = useBoardStore((s) => s.deleteSave)
   const listSaves        = useBoardStore((s) => s.listSaves)
+  const clearArrows      = useBoardStore((s) => s.clearArrows)
+  const clearBoard       = useBoardStore((s) => s.clearBoard)
 
   const [saveName, setSaveName] = useState('')
   const [saves, setSaves] = useState<SavedFormation[]>([])
@@ -87,6 +89,33 @@ export default function SaveLoadModal() {
             onClick={handleSave}
           >
             Save
+          </button>
+        </div>
+
+        {/* Footer actions */}
+        <div className="flex gap-2 p-4" style={{ borderBottom: '1px solid var(--border)' }}>
+          <button
+            className="flex-1 px-3 py-2 rounded text-xs font-medium"
+            style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            onClick={() => {
+              if (window.confirm('Clear all arrows? This cannot be undone.')) {
+                clearArrows()
+              }
+            }}
+          >
+            Clear arrows
+          </button>
+          <button
+            className="flex-1 px-3 py-2 rounded text-xs font-medium"
+            style={{ background: '#dc2626', color: 'white', border: 'none', cursor: 'pointer' }}
+            onClick={() => {
+              if (window.confirm('Reset board to default 4-3-3? All changes will be lost.')) {
+                clearBoard()
+                toggleModal()
+              }
+            }}
+          >
+            Reset board
           </button>
         </div>
 

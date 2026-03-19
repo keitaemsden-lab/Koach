@@ -239,6 +239,17 @@ export const useBoardStore = create<BoardStore>()(
       },
 
       setArrowTeam: (arrowTeam) => set({ arrowTeam }),
+
+      clearArrows: () => set({ arrows: [], selectedArrowId: null }),
+
+      clearBoard: () => set({
+        arrows: [],
+        selectedArrowId: null,
+        selectedPlayerId: null,
+        players: createInitialPlayers(),
+        notes: '',
+        activeFormation: '4-3-3',
+      }),
     }),
     {
       partialize: (state) => ({
