@@ -17,17 +17,24 @@ interface ArrowElementProps {
   arrow: Arrow
   isSelected: boolean
   onClick: (e: React.MouseEvent) => void
+  onDelete: () => void
 }
 
-export default function ArrowElement({ arrow, isSelected, onClick }: ArrowElementProps) {
+export default function ArrowElement({ arrow, isSelected, onClick, onDelete }: ArrowElementProps) {
   const colour = arrow.type === 'run' ? arrow.teamColour : ARROW_COLOURS[arrow.type]
   const stroke = isSelected ? 'var(--accent)' : colour
   const dashArray = DASHARRAY[arrow.type]
 
-  const mid = arrow.control ?? {
-    x: (arrow.start.x + arrow.end.x) / 2,
-    y: (arrow.start.y + arrow.end.y) / 2,
-  }
+  // For straight arrows: geometric midpoint. For curved: quadratic bezier midpoint.
+  const mid = arrow.style === 'curved' && arrow.control
+    ? {
+        x: (arrow.start.x + 2 * arrow.control.x + arrow.end.x) / 4,
+        y: (arrow.start.y + 2 * arrow.control.y + arrow.end.y) / 4,
+      }
+    : {
+        x: (arrow.start.x + arrow.end.x) / 2,
+        y: (arrow.start.y + arrow.end.y) / 2,
+      }
   const d =
     arrow.style === 'curved' && arrow.control
       ? curvedArrowPath(arrow.start, arrow.end, arrow.control)
@@ -71,17 +78,21 @@ export default function ArrowElement({ arrow, isSelected, onClick }: ArrowElemen
         style={{ pointerEvents: 'none' }}
       />
 
-      {/* Selected midpoint indicator */}
+      {/* Selected: delete button at midpoint */}
       {isSelected && (
-        <circle
-          cx={mid.x}
-          cy={mid.y}
-          r={5}
-          fill="var(--accent)"
-          stroke="white"
-          strokeWidth={1.5}
-          style={{ pointerEvents: 'none' }}
-        />
+        <g onClick={(e) => { e.stopPropagation(); onDelete() }} style={{ cursor: 'pointer' }}>
+          <circle cx={mid.x} cy={mid.y} r={10} fill="#dc2626" />
+          <text
+            x={mid.x}
+            y={mid.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="white"
+            fontSize={14}
+            fontWeight={700}
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+          >×</text>
+        </g>
       )}
     </g>
   )

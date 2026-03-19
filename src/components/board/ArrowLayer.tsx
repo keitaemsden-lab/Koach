@@ -11,6 +11,7 @@ export default function ArrowLayer({ svgRef }: ArrowLayerProps) {
   const arrows          = useBoardStore((s) => s.arrows)
   const selectedArrowId = useBoardStore((s) => s.selectedArrowId)
   const selectArrow     = useBoardStore((s) => s.selectArrow)
+  const removeArrow     = useBoardStore((s) => s.removeArrow)
   const updateArrowControl = useBoardStore((s) => s.updateArrowControl)
   const mode            = useBoardStore((s) => s.mode)
 
@@ -49,6 +50,7 @@ export default function ArrowLayer({ svgRef }: ArrowLayerProps) {
           arrow={arrow}
           isSelected={arrow.id === selectedArrowId}
           onClick={(e) => { e.stopPropagation(); selectArrow(arrow.id) }}
+          onDelete={() => removeArrow(arrow.id)}
         />
       ))}
 
@@ -64,10 +66,10 @@ export default function ArrowLayer({ svgRef }: ArrowLayerProps) {
           <circle
             cx={cp.x}
             cy={cp.y}
-            r={7}
-            fill="var(--accent)"
-            stroke="white"
-            strokeWidth={2}
+            r={9}
+            fill="white"
+            stroke="var(--accent, #3b82f6)"
+            strokeWidth={3}
             style={{ cursor: 'grab', touchAction: 'none' }}
             onPointerDown={(e) => onControlPointerDown(e, sel.id)}
             onPointerMove={onControlPointerMove}
