@@ -26,19 +26,21 @@ export default function ModeToggle() {
     <div className="flex items-center gap-0.5">
       <button
         title="Select / Move (S)"
+        aria-label="Select / Move"
         onClick={() => setMode('select')}
         style={buttonStyle(mode === 'select')}
       >
         <CursorClick size={18} weight="light" />
-        Select
+        <span className="hidden sm:inline">Select</span>
       </button>
       <button
         title="Draw Arrow (D)"
+        aria-label="Draw Arrow"
         onClick={() => setMode('draw-arrow')}
         style={buttonStyle(mode === 'draw-arrow')}
       >
         <PencilSimple size={18} weight="light" />
-        Draw
+        <span className="hidden sm:inline">Draw</span>
       </button>
     </div>
   )

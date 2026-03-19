@@ -19,7 +19,7 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
 
   return (
     <div
-      className="toolbar-pill absolute z-10 left-1/2 -translate-x-1/2 bottom-5 flex items-center gap-1.5 px-3"
+      className="toolbar-pill absolute z-10 left-1/2 -translate-x-1/2 bottom-5 flex items-center gap-1.5 px-3 [&::-webkit-scrollbar]:hidden"
       style={{
         height: 48,
         borderRadius: 999,
@@ -28,6 +28,9 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
         background: 'rgba(15, 23, 36, 0.82)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
       }}
     >
       <ModeToggle />
