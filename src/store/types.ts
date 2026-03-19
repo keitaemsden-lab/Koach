@@ -119,6 +119,7 @@ export type BoardState = {
   drawingState: DrawingState | null
   activeFormation: FormationName | null
   pitchOrientation: 'portrait' | 'landscape'
+  arrowTeam: 'home' | 'away' | 'neutral'
 }
 
 export type BoardActions = {
@@ -172,6 +173,9 @@ export type BoardActions = {
 
   // Orientation
   togglePitchOrientation: () => void
+
+  // Arrow team colour
+  setArrowTeam: (team: 'home' | 'away' | 'neutral') => void
 }
 
 export type BoardStore = BoardState & BoardActions

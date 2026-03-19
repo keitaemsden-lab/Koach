@@ -71,6 +71,7 @@ const initialState: BoardState = {
       return 'portrait'
     }
   })(),
+  arrowTeam: 'home' as 'home' | 'away' | 'neutral',
 }
 
 export const useBoardStore = create<BoardStore>()(
@@ -236,6 +237,8 @@ export const useBoardStore = create<BoardStore>()(
         try { localStorage.setItem(ORIENT_KEY, next) } catch { /* ignore */ }
         set({ pitchOrientation: next, players: next_players, arrows: next_arrows })
       },
+
+      setArrowTeam: (arrowTeam) => set({ arrowTeam }),
     }),
     {
       partialize: (state) => ({

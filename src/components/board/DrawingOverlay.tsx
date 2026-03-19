@@ -14,6 +14,8 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
   const arrowStyle   = useBoardStore((s) => s.arrowStyle)
   const drawingState = useBoardStore((s) => s.drawingState)
   const homeColour   = useBoardStore((s) => s.homeColour)
+  const awayColour   = useBoardStore((s) => s.awayColour)
+  const arrowTeam    = useBoardStore((s) => s.arrowTeam)
   const addArrow        = useBoardStore((s) => s.addArrow)
   const setDrawingState = useBoardStore((s) => s.setDrawingState)
   const selectArrow     = useBoardStore((s) => s.selectArrow)
@@ -22,6 +24,8 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
 
   const draggingArrowId = useRef<string | null>(null)
   const [pendingCurveAdjustId, setPendingCurveAdjustId] = useState<string | null>(null)
+
+  const resolvedColour = arrowTeam === 'home' ? homeColour : arrowTeam === 'away' ? awayColour : '#ffffff'
 
   const toSVG = useCallback((clientX: number, clientY: number): Point => {
     const svg = svgRef.current
@@ -56,7 +60,7 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
       start,
       end: pt,
       control: ctrl,
-      teamColour: homeColour,
+      teamColour: resolvedColour,
     })
     if (arrowStyle === 'curved') {
       const arrows = useBoardStore.getState().arrows
@@ -67,7 +71,7 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
       }
     }
     setDrawingState(null)
-  }, [mode, drawingState, arrowType, arrowStyle, homeColour, addArrow, setDrawingState, selectArrow, toSVG])
+  }, [mode, drawingState, arrowType, arrowStyle, resolvedColour, addArrow, setDrawingState, selectArrow, toSVG])
 
   const onControlPointerDown = useCallback((e: React.PointerEvent, arrowId: string) => {
     e.stopPropagation()
