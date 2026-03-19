@@ -24,7 +24,7 @@ export default function NotesPanel() {
 
       {/* Mobile: bottom sheet */}
       <div
-        className="md:hidden fixed inset-x-0 bottom-0 z-40"
+        className="md:hidden fixed inset-x-0 bottom-0 z-50"
         style={{
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
           transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -33,8 +33,12 @@ export default function NotesPanel() {
           maxHeight: '50vh',
           display: 'flex',
           flexDirection: 'column',
+          paddingBottom: 'calc(56px + env(safe-area-inset-bottom) + 8px)',
         }}
       >
+        <div className="flex justify-center pt-2 pb-1">
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)' }} />
+        </div>
         <NotesPanelContent notes={notes} setNotes={setNotes} />
       </div>
     </>
