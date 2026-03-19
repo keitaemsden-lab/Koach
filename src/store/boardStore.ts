@@ -5,9 +5,10 @@ import type {
 } from './types'
 import { FORMATIONS } from './formations'
 
-const STORAGE_KEY = 'tactic-board:saves'
-const SESSION_KEY = 'tactic-board:last-session'
-const DARK_KEY    = 'tactic-board:dark-mode'
+const STORAGE_KEY   = 'tactic-board:saves'
+const SESSION_KEY   = 'tactic-board:last-session'
+const DARK_KEY      = 'tactic-board:dark-mode'
+const ORIENT_KEY    = 'tactic-board:orientation'
 
 function applyDark(isDark: boolean) {
   document.documentElement.classList.toggle('dark', isDark)
@@ -63,6 +64,13 @@ const initialState: BoardState = {
   isSaveLoadModalOpen: false,
   drawingState: null,
   activeFormation: '4-3-3',
+  pitchOrientation: (() => {
+    try {
+      return (localStorage.getItem(ORIENT_KEY) as 'portrait' | 'landscape') ?? 'portrait'
+    } catch {
+      return 'portrait'
+    }
+  })(),
 }
 
 export const useBoardStore = create<BoardStore>()(
@@ -202,6 +210,12 @@ export const useBoardStore = create<BoardStore>()(
             homeColour: state.homeColour, awayColour: state.awayColour,
           })
         } catch { /* ignore */ }
+      },
+
+      togglePitchOrientation: () => {
+        const next = get().pitchOrientation === 'portrait' ? 'landscape' : 'portrait'
+        try { localStorage.setItem(ORIENT_KEY, next) } catch { /* ignore */ }
+        set({ pitchOrientation: next })
       },
     }),
     {

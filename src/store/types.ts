@@ -118,6 +118,7 @@ export type BoardState = {
   isSaveLoadModalOpen: boolean
   drawingState: DrawingState | null
   activeFormation: FormationName | null
+  pitchOrientation: 'portrait' | 'landscape'
 }
 
 export type BoardActions = {
@@ -168,6 +169,9 @@ export type BoardActions = {
   // Share / Export
   exportState: () => string
   importState: (encoded: string) => void
+
+  // Orientation
+  togglePitchOrientation: () => void
 }
 
 export type BoardStore = BoardState & BoardActions
