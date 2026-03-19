@@ -109,14 +109,19 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
         x={0} y={0} width={680} height={1050}
         fill="transparent"
         style={{ cursor: 'crosshair', pointerEvents: 'all' }}
-        onClick={onClick}
+        onPointerUp={(e) => {
+          if (!e.isPrimary) return
+          onClick(e as unknown as React.MouseEvent)
+        }}
         onPointerMove={onPointerMove}
       />
 
       {/* Start dot */}
       {drawingState && (
-        <circle cx={drawingState.start.x} cy={drawingState.start.y} r={4}
-          fill="white" opacity={0.8} style={{ pointerEvents: 'none' }} />
+        <>
+          <circle cx={drawingState.start.x} cy={drawingState.start.y} r={8} fill="white" opacity={0.15} style={{ pointerEvents: 'none' }} />
+          <circle cx={drawingState.start.x} cy={drawingState.start.y} r={4} fill="white" opacity={0.8} style={{ pointerEvents: 'none' }} />
+        </>
       )}
 
       {/* Preview line */}
