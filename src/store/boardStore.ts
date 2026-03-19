@@ -178,7 +178,14 @@ export const useBoardStore = create<BoardStore>()(
       listSaves: (): SavedFormation[] => {
         try {
           const raw = localStorage.getItem(STORAGE_KEY)
-          return raw ? (JSON.parse(raw) as SavedFormation[]) : []
+          if (!raw) return []
+          const parsed = JSON.parse(raw)
+          if (!Array.isArray(parsed)) return []
+          return parsed.filter((s) =>
+            typeof s?.name === 'string' &&
+            typeof s?.savedAt === 'number' &&
+            s?.state?.players !== undefined
+          )
         } catch { return [] }
       },
 
