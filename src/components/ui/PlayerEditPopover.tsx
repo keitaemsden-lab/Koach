@@ -61,16 +61,32 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
   const screenY = (svgRect.top  - containerRect.top)  + player.y * scaleY
 
   // Offset the popover so it appears above/beside the token
-  const popLeft = Math.min(screenX - 80, containerRect.width - 168)
-  const popTop  = screenY - 140
+  const POPOVER_W = 160
+  const POPOVER_H = 200
+
+  const popLeft = Math.max(
+    4,
+    Math.min(
+      screenX - POPOVER_W / 2,
+      (containerRect?.width ?? 400) - POPOVER_W - 4
+    )
+  )
+
+  const popTop = Math.max(
+    4,
+    Math.min(
+      screenY - POPOVER_H - 20,
+      (containerRect?.height ?? 600) - POPOVER_H - 4
+    )
+  )
 
   return (
     <div
       ref={popoverRef}
       className="absolute z-50 rounded-lg shadow-xl p-3 w-40"
       style={{
-        left: Math.max(0, popLeft),
-        top:  Math.max(0, popTop),
+        left: popLeft,
+        top:  popTop,
         backgroundColor: 'var(--bg-toolbar)',
         border: '1px solid var(--border)',
         color: 'var(--text-primary)',
