@@ -21,17 +21,19 @@ export default function ExportButton({ boardRef }: ExportButtonProps) {
   return (
     <button
       title="Export as PNG"
+      aria-label="Export as PNG"
       onClick={handleExport}
       disabled={loading}
-      className="flex items-center justify-center rounded-lg transition-colors duration-150 px-2"
+      className="flex items-center justify-center rounded-lg transition-colors duration-150"
       style={{
-        height: 36, minWidth: 44,
+        width: 36, height: 36, minWidth: 44,
         background: 'transparent',
-        color: 'var(--text-secondary)',
-        border: '1px solid var(--border)',
-        fontFamily: 'DM Mono, monospace',
-        fontSize: 11,
+        color: 'rgba(255,255,255,0.55)',
+        border: 'none',
+        borderRadius: 8,
         cursor: loading ? 'wait' : 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'color 150ms ease',
       }}
     >
       {loading ? (
