@@ -1,5 +1,5 @@
 import type { RefObject } from 'react'
-import { NoteBlank, FloppyDisk } from '@phosphor-icons/react'
+import { NoteBlank, FloppyDisk, ArrowsHorizontal } from '@phosphor-icons/react'
 import ModeToggle from '@/components/toolbar/ModeToggle'
 import ArrowTypePicker from '@/components/toolbar/ArrowTypePicker'
 import FormationPicker from '@/components/toolbar/FormationPicker'
@@ -13,9 +13,11 @@ interface ToolbarProps {
 }
 
 export default function Toolbar({ boardRef }: ToolbarProps) {
-  const toggleNotesPanel    = useBoardStore((s) => s.toggleNotesPanel)
-  const isNotesPanelOpen    = useBoardStore((s) => s.isNotesPanelOpen)
-  const toggleSaveLoadModal = useBoardStore((s) => s.toggleSaveLoadModal)
+  const toggleNotesPanel       = useBoardStore((s) => s.toggleNotesPanel)
+  const isNotesPanelOpen       = useBoardStore((s) => s.isNotesPanelOpen)
+  const toggleSaveLoadModal    = useBoardStore((s) => s.toggleSaveLoadModal)
+  const pitchOrientation       = useBoardStore((s) => s.pitchOrientation)
+  const togglePitchOrientation = useBoardStore((s) => s.togglePitchOrientation)
 
   return (
     <div
@@ -48,6 +50,24 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
       <div className="w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       <UndoRedoButtons />
+
+      <button
+        className="hidden md:flex items-center justify-center rounded-lg"
+        title={pitchOrientation === 'portrait' ? 'Switch to landscape' : 'Switch to portrait'}
+        aria-label="Toggle pitch orientation"
+        onClick={togglePitchOrientation}
+        style={{
+          width: 36, height: 36, minWidth: 44,
+          background: 'transparent',
+          color: 'rgba(255,255,255,0.55)',
+          borderRadius: 8,
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <ArrowsHorizontal size={18} weight="light" />
+      </button>
 
       <div className="ml-auto flex items-center gap-1">
         {/* Notes toggle */}
