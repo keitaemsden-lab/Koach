@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import { useRef } from 'react'
 import type { Player, Mode } from '@/store/types'
@@ -13,7 +14,7 @@ interface PlayerTokenProps {
   mode: Mode
 }
 
-export default function PlayerToken({
+function PlayerToken({
   player, colour, isSelected, onSelect, onEdit, svgRef, mode,
 }: PlayerTokenProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -130,3 +131,6 @@ export default function PlayerToken({
     </g>
   )
 }
+
+PlayerToken.displayName = 'PlayerToken'
+export default memo(PlayerToken)

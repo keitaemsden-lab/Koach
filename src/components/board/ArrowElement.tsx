@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { straightArrowPath, curvedArrowPath } from '@/utils/arrowPaths'
 import type { Arrow } from '@/store/types'
 
@@ -20,7 +21,7 @@ interface ArrowElementProps {
   onDelete: () => void
 }
 
-export default function ArrowElement({ arrow, isSelected, onClick, onDelete }: ArrowElementProps) {
+function ArrowElement({ arrow, isSelected, onClick, onDelete }: ArrowElementProps) {
   const colour = arrow.type === 'run' ? arrow.teamColour : ARROW_COLOURS[arrow.type]
   const stroke = isSelected ? 'var(--accent)' : colour
   const dashArray = DASHARRAY[arrow.type]
@@ -97,3 +98,6 @@ export default function ArrowElement({ arrow, isSelected, onClick, onDelete }: A
     </g>
   )
 }
+
+ArrowElement.displayName = 'ArrowElement'
+export default memo(ArrowElement)
