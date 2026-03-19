@@ -45,6 +45,7 @@ export default function ArrowTypePicker() {
           <button
             key={t}
             title={t.charAt(0).toUpperCase() + t.slice(1)}
+            aria-label={`Arrow type: ${t}`}
             onClick={() => setArrowType(t)}
             style={pillButtonStyle(arrowType === t)}
           >

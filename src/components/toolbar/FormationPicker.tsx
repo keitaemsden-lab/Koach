@@ -39,6 +39,7 @@ export default function FormationPicker() {
           appearance: 'auto',
         }}
         title="Load formation"
+        aria-label="Load formation"
       >
         <option value="" disabled>Formation</option>
         {FORMATIONS.map((f) => (

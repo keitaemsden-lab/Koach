@@ -11,6 +11,7 @@ export default function UndoRedoButtons() {
     <div className="flex items-center gap-0.5">
       <button
         title="Undo (Ctrl+Z)"
+        aria-label="Undo"
         disabled={!canUndo}
         onClick={() => undo()}
         className="flex items-center justify-center rounded-lg transition-colors duration-150"
@@ -25,6 +26,7 @@ export default function UndoRedoButtons() {
       </button>
       <button
         title="Redo (Ctrl+Shift+Z)"
+        aria-label="Redo"
         disabled={!canRedo}
         onClick={() => redo()}
         className="flex items-center justify-center rounded-lg transition-colors duration-150"

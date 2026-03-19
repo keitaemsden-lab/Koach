@@ -29,6 +29,7 @@ export default function TeamColourPicker() {
           onChange={(e) => setHomeColour(e.target.value)}
           className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
           title="Home team colour"
+          aria-label="Home team colour"
         />
       </label>
       <label title="Away team colour" className="relative" style={{ cursor: 'pointer' }}>
@@ -43,6 +44,7 @@ export default function TeamColourPicker() {
           onChange={(e) => setAwayColour(e.target.value)}
           className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
           title="Away team colour"
+          aria-label="Away team colour"
         />
       </label>
     </div>
