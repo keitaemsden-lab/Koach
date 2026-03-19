@@ -1,5 +1,5 @@
 import { useBoardStore } from '@/store/boardStore'
-import type { ArrowType, ArrowStyle } from '@/store/types'
+import type { ArrowType } from '@/store/types'
 
 type ArrowTeam = 'home' | 'away' | 'neutral'
 
@@ -21,12 +21,10 @@ const pillButtonStyle = (isActive: boolean): React.CSSProperties => ({
 export default function ArrowTypePicker() {
   const mode       = useBoardStore((s) => s.mode)
   const arrowType  = useBoardStore((s) => s.arrowType)
-  const arrowStyle = useBoardStore((s) => s.arrowStyle)
   const arrowTeam  = useBoardStore((s) => s.arrowTeam)
   const homeColour = useBoardStore((s) => s.homeColour)
   const awayColour = useBoardStore((s) => s.awayColour)
   const setArrowType  = useBoardStore((s) => s.setArrowType)
-  const setArrowStyle = useBoardStore((s) => s.setArrowStyle)
   const setArrowTeam  = useBoardStore((s) => s.setArrowTeam)
 
   const TEAM_COLOURS: Record<ArrowTeam, string> = {
@@ -54,20 +52,6 @@ export default function ArrowTypePicker() {
         ))}
       </div>
 
-      {/* Arrow style */}
-      <div className="flex items-center gap-0.5">
-        {(['straight', 'curved'] as ArrowStyle[]).map((s) => (
-          <button
-            key={s}
-            title={s.charAt(0).toUpperCase() + s.slice(1)}
-            aria-label={s.charAt(0).toUpperCase() + s.slice(1) + ' arrow'}
-            onClick={() => setArrowStyle(s)}
-            style={pillButtonStyle(arrowStyle === s)}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
 
       {/* Arrow team colour dots */}
       <div className="flex items-center gap-1 px-1">

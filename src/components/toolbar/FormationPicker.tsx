@@ -64,7 +64,9 @@ export default function FormationPicker() {
               fontFamily: 'DM Mono, monospace',
             }}
           >
-            <p className="mb-4">Load <strong>{pending}</strong>? This will reset home team positions.</p>
+            <p className="mb-4">
+              Load <strong>{pending}</strong>? This will reset {ownHalf ? "both teams'" : "home team"} positions.
+            </p>
             
             <label className="flex items-center gap-2 mb-4 cursor-pointer">
               <input

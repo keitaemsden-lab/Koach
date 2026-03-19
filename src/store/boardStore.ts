@@ -60,7 +60,7 @@ const initOrientation = (() => {
 const initialState: BoardState = {
   mode: 'select',
   arrowType: 'run',
-  arrowStyle: 'straight',
+  arrowStyle: 'curved',
   players: createInitialPlayers(initOrientation),
   arrows: [],
   notes: '',
@@ -131,7 +131,8 @@ export const useBoardStore = create<BoardStore>()(
             isLandscape ? { x: p.y, y: 680 - p.x } : p
 
           const homePlayers = s.players.filter((p) => p.team === 'home')
-          const awayPlayers = s.players.filter((p) => p.team === 'away')
+          let awayPlayers = s.players.filter((p) => p.team === 'away')
+          
           const newHome: Player[] = positions.map((fp, i) => {
             let y = fp.y
             if (ownHalf) {
@@ -149,6 +150,27 @@ export const useBoardStore = create<BoardStore>()(
               y: transformed.y,
             }
           })
+
+          if (ownHalf) {
+            awayPlayers = positions.map((fp, i) => {
+              // Map [300, 960] to [540, 960] for the base shape
+              const y = 540 + ((fp.y - 300) / 660) * 420
+              
+              // Mirror for Away to top half
+              const awayX = 680 - fp.x
+              const awayY = 1050 - y
+              const transformed = transform({ x: awayX, y: awayY })
+              return {
+                id: awayPlayers[i]?.id ?? crypto.randomUUID(),
+                team: 'away',
+                position: fp.position,
+                name: awayPlayers[i]?.name ?? `#${i + 1}`,
+                x: transformed.x,
+                y: transformed.y,
+              }
+            })
+          }
+
           return { players: [...newHome, ...awayPlayers], activeFormation: name }
         })
       },
