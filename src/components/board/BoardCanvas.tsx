@@ -9,6 +9,7 @@ import PlayerLayer from './PlayerLayer'
 import ArrowLayer from './ArrowLayer'
 import DrawingOverlay from './DrawingOverlay'
 import PlayerEditPopover from '@/components/ui/PlayerEditPopover'
+import HelpOverlay from '@/components/ui/HelpOverlay'
 import { useBoardStore } from '@/store/boardStore'
 
 interface BoardCanvasProps {
@@ -100,6 +101,8 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
             onClose={closePlayerEditor}
           />
         )}
+
+        <HelpOverlay />
       </div>
     </div>
   )
