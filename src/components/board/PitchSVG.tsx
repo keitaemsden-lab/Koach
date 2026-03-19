@@ -1,6 +1,10 @@
 import { memo } from 'react'
 
-const PitchSVG = memo(function PitchSVG() {
+interface PitchSVGProps {
+  orientation?: 'portrait' | 'landscape'
+}
+
+const PitchSVG = memo(function PitchSVG({ orientation = 'portrait' }: PitchSVGProps) {
   const L = 10, T = 10, R = 670, B = 1040
   const W = R - L   // 660
   const H = B - T   // 1030
@@ -33,8 +37,10 @@ const PitchSVG = memo(function PitchSVG() {
 
   const line = { stroke: 'var(--pitch-lines)', strokeWidth: 2, fill: 'none' }
 
+  const isLandscape = orientation === 'landscape'
+
   return (
-    <g>
+    <g transform={isLandscape ? 'rotate(-90) translate(-1050, 0)' : undefined}>
       <defs>
         <pattern id="pitch-stripes" x="0" y="0" width="680" height="64" patternUnits="userSpaceOnUse">
           <rect x="0" y="0" width="680" height="32" fill="var(--pitch-fill)" />

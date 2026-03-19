@@ -22,6 +22,12 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
   const selectPlayer   = useBoardStore((s) => s.selectPlayer)
   const selectArrow    = useBoardStore((s) => s.selectArrow)
   const players        = useBoardStore((s) => s.players)
+  const pitchOrientation = useBoardStore((s) => s.pitchOrientation)
+
+  const isLandscape = pitchOrientation === 'landscape'
+  const VB_W = isLandscape ? 1050 : 680
+  const VB_H = isLandscape ? 680 : 1050
+
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null)
   const selectedPlayer = players.find((p) => p.id === editingPlayerId) ?? null
 
@@ -45,17 +51,17 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
     const svg = svgRef.current
     if (!svg) return
     const rect = svg.getBoundingClientRect()
-    const scaleX = 680 / rect.width
-    const scaleY = 1050 / rect.height
+    const scaleX = VB_W / rect.width
+    const scaleY = VB_H / rect.height
     const id = String(active.id)
     const player = useBoardStore.getState().players.find((p) => p.id === id)
     if (!player) return
     movePlayer(
       id,
-      Math.max(10, Math.min(670, player.x + delta.x * scaleX)),
-      Math.max(10, Math.min(1040, player.y + delta.y * scaleY)),
+      Math.max(10, Math.min(VB_W - 10, player.x + delta.x * scaleX)),
+      Math.max(10, Math.min(VB_H - 10, player.y + delta.y * scaleY)),
     )
-  }, [movePlayer])
+  }, [movePlayer, VB_W, VB_H])
 
   return (
     <div
@@ -66,15 +72,21 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
       <div
         ref={boardRef}
         className="relative flex-shrink-0"
-        style={{ aspectRatio: '680 / 1050', height: '100%', maxWidth: '100%' }}
+        style={{
+          aspectRatio: isLandscape ? '1050 / 680' : '680 / 1050',
+          height: isLandscape ? 'auto' : '100%',
+          width: isLandscape ? '100%' : 'auto',
+          maxWidth: isLandscape ? '100%' : undefined,
+          maxHeight: isLandscape ? '100%' : undefined,
+        }}
       >
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
           <svg
             ref={svgRef}
-            viewBox="0 0 680 1050"
+            viewBox={isLandscape ? '0 0 1050 680' : '0 0 680 1050'}
             style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}
           >
-            <PitchSVG />
+            <PitchSVG orientation={pitchOrientation} />
             <ArrowLayer svgRef={svgRef} />
             <PlayerLayer svgRef={svgRef} onEditPlayer={openPlayerEditor} />
             <DrawingOverlay svgRef={svgRef} />
