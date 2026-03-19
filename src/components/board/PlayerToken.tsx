@@ -29,6 +29,14 @@ export default function PlayerToken({
   const dx = transform ? transform.x * scaleX : 0
   const dy = transform ? transform.y * scaleY : 0
 
+  const VB_W = 680
+  const VB_H = 1050
+
+  const rawX = player.x + dx
+  const rawY = player.y + dy
+  const clampedX = isDragging ? Math.max(16, Math.min(VB_W - 16, rawX)) : rawX
+  const clampedY = isDragging ? Math.max(16, Math.min(VB_H - 16, rawY)) : rawY
+
   const shortName = player.name.length > 8 ? player.name.slice(0, 7) + '…' : player.name
   const lastTouchTapTs = useRef(0)
 
@@ -45,10 +53,11 @@ export default function PlayerToken({
   return (
     <g
       ref={setNodeRef as (el: SVGGElement | null) => void}
-      transform={`translate(${player.x + dx}, ${player.y + dy})`}
+      transform={`translate(${clampedX}, ${clampedY}) ${isDragging ? 'scale(1.15)' : ''}`}
       style={{
         cursor: isDragging ? 'grabbing' : (mode === 'draw-arrow' ? 'crosshair' : 'grab'),
-        filter: isDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' : undefined,
+        filter: isDragging ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))' : undefined,
+        transition: isDragging ? 'none' : 'transform 150ms ease',
         touchAction: 'none',
       }}
       onClick={(e) => {
