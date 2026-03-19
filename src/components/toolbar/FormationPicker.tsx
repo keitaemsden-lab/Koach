@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useBoardStore } from '@/store/boardStore'
 import type { FormationName } from '@/store/types'
 
@@ -9,6 +10,7 @@ export default function FormationPicker() {
   const loadFormation   = useBoardStore((s) => s.loadFormation)
   const players         = useBoardStore((s) => s.players)
   const [pending, setPending] = useState<FormationName | null>(null)
+  const [ownHalf, setOwnHalf] = useState(false)
 
   function handleSelect(name: FormationName) {
     if (players.length > 0 && name !== activeFormation) {
@@ -21,7 +23,7 @@ export default function FormationPicker() {
   return (
     <div className="flex items-center gap-1">
       <select
-        value={activeFormation ?? ''}
+        value={pending ?? activeFormation ?? ''}
         onChange={(e) => handleSelect(e.target.value as FormationName)}
         className=""
         style={{
@@ -41,16 +43,16 @@ export default function FormationPicker() {
         title="Load formation"
         aria-label="Load formation"
       >
-        <option value="" disabled>Formation</option>
+        <option value="" disabled className="text-black">Formation</option>
         {FORMATIONS.map((f) => (
-          <option key={f} value={f}>{f}</option>
+          <option key={f} value={f} className="text-black">{f}</option>
         ))}
       </select>
 
       {/* Confirmation dialog */}
-      {pending && (
+      {pending && createPortal(
         <div
-          className="fixed inset-0 flex items-center justify-center z-50"
+          className="fixed inset-0 flex items-center justify-center z-[9999]"
           style={{ background: 'rgba(0,0,0,0.5)' }}
         >
           <div
@@ -63,11 +65,22 @@ export default function FormationPicker() {
             }}
           >
             <p className="mb-4">Load <strong>{pending}</strong>? This will reset home team positions.</p>
+            
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={ownHalf}
+                onChange={(e) => setOwnHalf(e.target.checked)}
+                className="w-4 h-4 cursor-pointer accent-[var(--accent)]"
+              />
+              <span className="text-xs font-medium">Own half only</span>
+            </label>
+
             <div className="flex gap-2">
               <button
                 className="flex-1 py-2 rounded-lg text-xs font-medium"
                 style={{ background: 'var(--accent)', color: 'white' }}
-                onClick={() => { loadFormation(pending!); setPending(null) }}
+                onClick={() => { loadFormation(pending, ownHalf); setPending(null) }}
               >
                 Load
               </button>
@@ -80,7 +93,8 @@ export default function FormationPicker() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

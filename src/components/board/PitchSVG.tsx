@@ -40,7 +40,7 @@ const PitchSVG = memo(function PitchSVG({ orientation = 'portrait' }: PitchSVGPr
   const isLandscape = orientation === 'landscape'
 
   return (
-    <g transform={isLandscape ? 'rotate(-90) translate(-1050, 0)' : undefined}>
+    <g transform={isLandscape ? 'translate(0, 680) rotate(-90)' : undefined}>
       <defs>
         <pattern id="pitch-stripes" x="0" y="0" width="680" height="64" patternUnits="userSpaceOnUse">
           <rect x="0" y="0" width="680" height="32" fill="var(--pitch-fill)" />

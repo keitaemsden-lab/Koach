@@ -1,8 +1,9 @@
 import { memo } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import type { Player, Mode } from '@/store/types'
 import { lightenColour } from '@/utils/colour'
+import { useBoardStore } from '@/store/boardStore'
 
 interface PlayerTokenProps {
   player: Player
@@ -22,16 +23,29 @@ function PlayerToken({
     disabled: mode === 'draw-arrow',
   })
 
-  const svg = svgRef.current
-  const rect = svg?.getBoundingClientRect()
-  const scaleX = rect ? 680 / rect.width : 1
-  const scaleY = rect ? 1050 / rect.height : 1
+  const pitchOrientation = useBoardStore((s) => s.pitchOrientation)
+  const isLandscape = pitchOrientation === 'landscape'
+  const VB_W = isLandscape ? 1050 : 680
+  const VB_H = isLandscape ? 680 : 1050
+
+  const [scale, setScale] = useState({ x: 1, y: 1 })
+  useEffect(() => {
+    function updateScale() {
+      const svg = svgRef.current
+      if (!svg) return
+      const rect = svg.getBoundingClientRect()
+      setScale({ x: VB_W / rect.width, y: VB_H / rect.height })
+    }
+    updateScale()
+    window.addEventListener('resize', updateScale)
+    return () => window.removeEventListener('resize', updateScale)
+  }, [svgRef, VB_W, VB_H])
+
+  const scaleX = scale.x
+  const scaleY = scale.y
 
   const dx = transform ? transform.x * scaleX : 0
   const dy = transform ? transform.y * scaleY : 0
-
-  const VB_W = 680
-  const VB_H = 1050
 
   const rawX = player.x + dx
   const rawY = player.y + dy
@@ -60,6 +74,7 @@ function PlayerToken({
         filter: isDragging ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))' : undefined,
         transition: isDragging ? 'none' : 'transform 150ms ease',
         touchAction: 'none',
+        outline: 'none',
       }}
       onClick={(e) => {
         if (mode === 'draw-arrow') return
@@ -77,14 +92,14 @@ function PlayerToken({
     >
       {/* Per-token SVG defs — IDs namespaced to prevent DOM collisions across 22 tokens */}
       <defs>
-        <radialGradient id={`grad-${player.id}`} cx="40%" cy="35%" r="65%">
+        <radialGradient id={`grad-${player.id}-${colour.replace('#', '')}`} cx="40%" cy="35%" r="65%">
           <stop offset="0%" stopColor={lightenColour(colour, 0.25)} />
           <stop offset="100%" stopColor={colour} />
         </radialGradient>
         <filter id={`shadow-${player.id}`} x="-30%" y="-30%" width="160%" height="160%">
           <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.4" />
         </filter>
-        <filter id={`glow-${player.id}`} x="-50%" y="-50%" width="200%" height="200%">
+        <filter id={`glow-${player.id}-${colour.replace('#', '')}`} x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={colour} floodOpacity="0.85" />
         </filter>
       </defs>
@@ -93,10 +108,10 @@ function PlayerToken({
           Drag shadow is handled by the <g> style above — no isDragging branch needed here. */}
       <circle
         r={16}
-        fill={`url(#grad-${player.id})`}
+        fill={`url(#grad-${player.id}-${colour.replace('#', '')})`}
         stroke="rgba(255,255,255,0.6)"
         strokeWidth={1.5}
-        filter={isSelected ? `url(#glow-${player.id})` : `url(#shadow-${player.id})`}
+        filter={isSelected ? `url(#glow-${player.id}-${colour.replace('#', '')})` : `url(#shadow-${player.id})`}
       />
 
       {/* Inner shimmer ring */}

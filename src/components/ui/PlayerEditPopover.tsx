@@ -31,6 +31,10 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
     setPosition(player.position)
   }, [player.id, player.name, player.position])
 
+  function applyChanges() {
+    updatePlayer(player.id, { name, position })
+  }
+
   // Close on click outside
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -44,41 +48,52 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
     return () => document.removeEventListener('mousedown', handler)
   })
 
-  function applyChanges() {
-    updatePlayer(player.id, { name, position })
-  }
+  const [coords, setCoords] = useState<{ left: number, top: number } | null>(null)
 
-  // Calculate position relative to the SVG element
-  const svg = svgRef.current
-  const svgRect = svg?.getBoundingClientRect()
-  const containerRect = svg?.parentElement?.getBoundingClientRect()
+  useEffect(() => {
+    function updateCoords() {
+      const svg = svgRef.current
+      if (!svg) return
+      const svgRect = svg.getBoundingClientRect()
+      const containerRect = svg.parentElement?.getBoundingClientRect()
+      if (!svgRect || !containerRect) return
 
-  if (!svgRect || !containerRect) return null
+      const scaleX = svgRect.width / 680
+      const scaleY = svgRect.height / 1050
+      const screenX = (svgRect.left - containerRect.left) + player.x * scaleX
+      const screenY = (svgRect.top  - containerRect.top)  + player.y * scaleY
 
-  const scaleX = svgRect.width / 680
-  const scaleY = svgRect.height / 1050
-  const screenX = (svgRect.left - containerRect.left) + player.x * scaleX
-  const screenY = (svgRect.top  - containerRect.top)  + player.y * scaleY
+      const POPOVER_W = 160
+      const POPOVER_H = 200
 
-  // Offset the popover so it appears above/beside the token
-  const POPOVER_W = 160
-  const POPOVER_H = 200
+      const left = Math.max(
+        4,
+        Math.min(
+          screenX - POPOVER_W / 2,
+          containerRect.width - POPOVER_W - 4
+        )
+      )
 
-  const popLeft = Math.max(
-    4,
-    Math.min(
-      screenX - POPOVER_W / 2,
-      (containerRect?.width ?? 400) - POPOVER_W - 4
-    )
-  )
+      const top = Math.max(
+        4,
+        Math.min(
+          screenY - POPOVER_H - 20,
+          containerRect.height - POPOVER_H - 4
+        )
+      )
 
-  const popTop = Math.max(
-    4,
-    Math.min(
-      screenY - POPOVER_H - 20,
-      (containerRect?.height ?? 600) - POPOVER_H - 4
-    )
-  )
+      setCoords({ left, top })
+    }
+
+    updateCoords()
+    window.addEventListener('resize', updateCoords)
+    return () => window.removeEventListener('resize', updateCoords)
+  }, [svgRef, player.x, player.y])
+
+  if (!coords) return null
+
+  const popLeft = coords.left
+  const popTop = coords.top
 
   return (
     <div

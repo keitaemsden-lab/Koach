@@ -17,7 +17,9 @@ export default function SaveLoadModal() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isOpen) setSaves(listSaves())
+    if (!isOpen) return
+    const t = setTimeout(() => setSaves(listSaves()), 0)
+    return () => clearTimeout(t)
   }, [isOpen, listSaves])
 
   if (!isOpen) return null

@@ -24,23 +24,24 @@ function getInitialDark(): boolean {
     : false
 }
 
-function createInitialPlayers(): Player[] {
+function createInitialPlayers(orientation: 'portrait' | 'landscape'): Player[] {
   const positions = FORMATIONS['4-3-3']
+  const transform = (p: { x: number, y: number }) =>
+    orientation === 'landscape' ? { x: p.y, y: 680 - p.x } : p
+
   const home: Player[] = positions.map((fp, i) => ({
     id: crypto.randomUUID(),
     team: 'home',
     position: fp.position,
     name: `#${i + 1}`,
-    x: fp.x,
-    y: fp.y,
+    ...transform(fp)
   }))
   const away: Player[] = positions.map((fp, i) => ({
     id: crypto.randomUUID(),
     team: 'away',
     position: fp.position,
     name: `#${i + 1}`,
-    x: 680 - fp.x,
-    y: 1050 - fp.y,
+    ...transform({ x: 680 - fp.x, y: 1050 - fp.y })
   }))
   return [...home, ...away]
 }
@@ -48,11 +49,19 @@ function createInitialPlayers(): Player[] {
 const initialDark = getInitialDark()
 applyDark(initialDark)
 
+const initOrientation = (() => {
+  try {
+    return (localStorage.getItem(ORIENT_KEY) as 'portrait' | 'landscape') ?? 'portrait'
+  } catch {
+    return 'portrait'
+  }
+})()
+
 const initialState: BoardState = {
   mode: 'select',
   arrowType: 'run',
   arrowStyle: 'straight',
-  players: createInitialPlayers(),
+  players: createInitialPlayers(initOrientation),
   arrows: [],
   notes: '',
   homeColour: '#2563eb',
@@ -64,13 +73,7 @@ const initialState: BoardState = {
   isSaveLoadModalOpen: false,
   drawingState: null,
   activeFormation: '4-3-3',
-  pitchOrientation: (() => {
-    try {
-      return (localStorage.getItem(ORIENT_KEY) as 'portrait' | 'landscape') ?? 'portrait'
-    } catch {
-      return 'portrait'
-    }
-  })(),
+  pitchOrientation: initOrientation,
   arrowTeam: 'home' as 'home' | 'away' | 'neutral',
 }
 
@@ -84,15 +87,22 @@ export const useBoardStore = create<BoardStore>()(
       setArrowStyle: (arrowStyle) => set({ arrowStyle }),
 
       movePlayer: (id, x, y) =>
-        set((s) => ({ players: s.players.map((p) => p.id === id ? { ...p, x, y } : p) })),
+        set((s) => ({ 
+          players: s.players.map((p) => p.id === id ? { ...p, x, y } : p),
+          activeFormation: null 
+        })),
 
       updatePlayer: (id, patch) =>
-        set((s) => ({ players: s.players.map((p) => p.id === id ? { ...p, ...patch } : p) })),
+        set((s) => ({ 
+          players: s.players.map((p) => p.id === id ? { ...p, ...patch } : p),
+          activeFormation: null 
+        })),
 
       removePlayer: (id) =>
         set((s) => ({
           players: s.players.filter((p) => p.id !== id),
           selectedPlayerId: s.selectedPlayerId === id ? null : s.selectedPlayerId,
+          activeFormation: null
         })),
 
       addArrow: (arrow) =>
@@ -112,20 +122,33 @@ export const useBoardStore = create<BoardStore>()(
       selectPlayer: (id) => set({ selectedPlayerId: id, selectedArrowId: null }),
       selectArrow:  (id) => set({ selectedArrowId: id, selectedPlayerId: null }),
 
-      loadFormation: (name) => {
+      loadFormation: (name, ownHalf) => {
         const positions = FORMATIONS[name]
         if (!positions) return
         set((s) => {
+          const isLandscape = s.pitchOrientation === 'landscape'
+          const transform = (p: { x: number, y: number }) =>
+            isLandscape ? { x: p.y, y: 680 - p.x } : p
+
           const homePlayers = s.players.filter((p) => p.team === 'home')
           const awayPlayers = s.players.filter((p) => p.team === 'away')
-          const newHome: Player[] = positions.map((fp, i) => ({
-            id: homePlayers[i]?.id ?? crypto.randomUUID(),
-            team: 'home',
-            position: fp.position,
-            name: homePlayers[i]?.name ?? `#${i + 1}`,
-            x: fp.x,
-            y: fp.y,
-          }))
+          const newHome: Player[] = positions.map((fp, i) => {
+            let y = fp.y
+            if (ownHalf) {
+              // Map [300, 960] to [540, 960]
+              y = 540 + ((y - 300) / 660) * 420
+            }
+
+            const transformed = transform({ x: fp.x, y })
+            return {
+              id: homePlayers[i]?.id ?? crypto.randomUUID(),
+              team: 'home',
+              position: fp.position,
+              name: homePlayers[i]?.name ?? `#${i + 1}`,
+              x: transformed.x,
+              y: transformed.y,
+            }
+          })
           return { players: [...newHome, ...awayPlayers], activeFormation: name }
         })
       },
@@ -224,10 +247,13 @@ export const useBoardStore = create<BoardStore>()(
         const current = get().pitchOrientation
         const next = current === 'portrait' ? 'landscape' : 'portrait'
 
-        const transformPoint = (p: { x: number; y: number }) => ({
-          x: p.y,
-          y: p.x,
-        })
+        const transformPoint = (p: { x: number; y: number }) => {
+          if (current === 'portrait') {
+            return { x: p.y, y: 680 - p.x }
+          } else {
+            return { x: 680 - p.y, y: p.x }
+          }
+        }
 
         const next_players = get().players.map((p) => ({
           ...p,
@@ -249,14 +275,14 @@ export const useBoardStore = create<BoardStore>()(
 
       clearArrows: () => set({ arrows: [], selectedArrowId: null }),
 
-      clearBoard: () => set({
+      clearBoard: () => set((s) => ({
         arrows: [],
         selectedArrowId: null,
         selectedPlayerId: null,
-        players: createInitialPlayers(),
+        players: createInitialPlayers(s.pitchOrientation),
         notes: '',
         activeFormation: '4-3-3',
-      }),
+      })),
     }),
     {
       partialize: (state) => ({

@@ -24,15 +24,13 @@ export default function NotesPanel() {
 
       {/* Mobile: bottom sheet */}
       <div
-        className="md:hidden fixed inset-x-0 bottom-0 z-50"
+        className="md:hidden fixed inset-x-0 bottom-0 z-50 flex flex-col"
         style={{
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
           transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
           background: 'var(--bg-panel)',
           borderTop: '1px solid var(--border)',
           maxHeight: '50vh',
-          display: 'flex',
-          flexDirection: 'column',
           paddingBottom: 'calc(56px + env(safe-area-inset-bottom) + 8px)',
         }}
       >

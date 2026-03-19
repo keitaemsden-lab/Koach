@@ -146,7 +146,7 @@ export type BoardActions = {
   selectArrow: (id: string | null) => void
 
   // Formations
-  loadFormation: (name: FormationName) => void
+  loadFormation: (name: FormationName, ownHalf?: boolean) => void
 
   // Colours
   setHomeColour: (colour: string) => void

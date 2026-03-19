@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState } from 'react'
 import {
   DndContext, type DragEndEvent,
-  PointerSensor, TouchSensor,
+  MouseSensor, TouchSensor,
   useSensors, useSensor,
 } from '@dnd-kit/core'
 import PitchSVG from './PitchSVG'
@@ -42,8 +42,8 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
   }, [])
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 150, tolerance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
   )
 
   const onDragEnd = useCallback((event: DragEndEvent) => {
