@@ -213,9 +213,28 @@ export const useBoardStore = create<BoardStore>()(
       },
 
       togglePitchOrientation: () => {
-        const next = get().pitchOrientation === 'portrait' ? 'landscape' : 'portrait'
+        const current = get().pitchOrientation
+        const next = current === 'portrait' ? 'landscape' : 'portrait'
+
+        const transformPoint = (p: { x: number; y: number }) => ({
+          x: p.y,
+          y: p.x,
+        })
+
+        const next_players = get().players.map((p) => ({
+          ...p,
+          ...transformPoint(p),
+        }))
+
+        const next_arrows = get().arrows.map((a) => ({
+          ...a,
+          start: transformPoint(a.start),
+          end: transformPoint(a.end),
+          control: a.control ? transformPoint(a.control) : undefined,
+        }))
+
         try { localStorage.setItem(ORIENT_KEY, next) } catch { /* ignore */ }
-        set({ pitchOrientation: next })
+        set({ pitchOrientation: next, players: next_players, arrows: next_arrows })
       },
     }),
     {
