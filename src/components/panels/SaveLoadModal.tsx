@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useBoardStore } from '@/store/boardStore'
 import type { SavedFormation } from '@/store/types'
 
@@ -15,6 +16,7 @@ export default function SaveLoadModal() {
   const [saveName, setSaveName] = useState('')
   const [saves, setSaves] = useState<SavedFormation[]>([])
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<'clear-arrows' | 'reset-board' | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -43,6 +45,7 @@ export default function SaveLoadModal() {
   }
 
   return (
+    <>
     <div
       className="fixed inset-0 flex items-center justify-center z-50"
       style={{ background: 'rgba(0,0,0,0.6)', animation: 'modal-bg-in 200ms ease' }}
@@ -99,23 +102,14 @@ export default function SaveLoadModal() {
           <button
             className="flex-1 px-3 py-2 rounded text-xs font-medium"
             style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer' }}
-            onClick={() => {
-              if (window.confirm('Clear all arrows? This cannot be undone.')) {
-                clearArrows()
-              }
-            }}
+            onClick={() => setPendingAction('clear-arrows')}
           >
             Clear arrows
           </button>
           <button
             className="flex-1 px-3 py-2 rounded text-xs font-medium"
             style={{ background: '#dc2626', color: 'white', border: 'none', cursor: 'pointer' }}
-            onClick={() => {
-              if (window.confirm('Reset board to default 4-3-3? All changes will be lost.')) {
-                clearBoard()
-                toggleModal()
-              }
-            }}
+            onClick={() => setPendingAction('reset-board')}
           >
             Reset board
           </button>
@@ -169,5 +163,55 @@ export default function SaveLoadModal() {
         </div>
       </div>
     </div>
+
+    {/* Confirmation portal for Clear arrows / Reset board */}
+    {pendingAction && createPortal(
+      <div
+        className="fixed inset-0 flex items-center justify-center z-[9999]"
+        style={{ background: 'rgba(0,0,0,0.5)' }}
+      >
+        <div
+          className="rounded-xl p-5 shadow-2xl max-w-xs w-full mx-4 text-sm"
+          style={{
+            background: 'var(--bg-toolbar)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-primary)',
+            fontFamily: 'DM Mono, monospace',
+          }}
+        >
+          <p className="mb-4">
+            {pendingAction === 'clear-arrows'
+              ? 'Clear all arrows? This cannot be undone.'
+              : 'Reset board to default 4-3-3? All changes will be lost.'}
+          </p>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 py-2 rounded-lg text-xs font-medium"
+              style={{ background: pendingAction === 'reset-board' ? '#dc2626' : 'var(--accent)', color: 'white' }}
+              onClick={() => {
+                if (pendingAction === 'clear-arrows') {
+                  clearArrows()
+                } else {
+                  clearBoard()
+                  toggleModal()
+                }
+                setPendingAction(null)
+              }}
+            >
+              {pendingAction === 'clear-arrows' ? 'Clear' : 'Reset'}
+            </button>
+            <button
+              className="flex-1 py-2 rounded-lg text-xs font-medium"
+              style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+              onClick={() => setPendingAction(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   )
 }

@@ -1,9 +1,9 @@
 import { memo } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { useRef, useState, useEffect } from 'react'
+import { useRef } from 'react'
 import type { Player, Mode } from '@/store/types'
 import { lightenColour } from '@/utils/colour'
-import { useBoardStore } from '@/store/boardStore'
+import { useSVGCoordinates } from '@/hooks/useSVGCoordinates'
 
 interface PlayerTokenProps {
   player: Player
@@ -23,26 +23,7 @@ function PlayerToken({
     disabled: mode === 'draw-arrow',
   })
 
-  const pitchOrientation = useBoardStore((s) => s.pitchOrientation)
-  const isLandscape = pitchOrientation === 'landscape'
-  const VB_W = isLandscape ? 1050 : 680
-  const VB_H = isLandscape ? 680 : 1050
-
-  const [scale, setScale] = useState({ x: 1, y: 1 })
-  useEffect(() => {
-    function updateScale() {
-      const svg = svgRef.current
-      if (!svg) return
-      const rect = svg.getBoundingClientRect()
-      setScale({ x: VB_W / rect.width, y: VB_H / rect.height })
-    }
-    updateScale()
-    window.addEventListener('resize', updateScale)
-    return () => window.removeEventListener('resize', updateScale)
-  }, [svgRef, VB_W, VB_H])
-
-  const scaleX = scale.x
-  const scaleY = scale.y
+  const { VB_W, VB_H, scaleX, scaleY } = useSVGCoordinates(svgRef)
 
   const dx = transform ? transform.x * scaleX : 0
   const dy = transform ? transform.y * scaleY : 0

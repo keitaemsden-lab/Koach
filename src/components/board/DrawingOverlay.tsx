@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { useBoardStore } from '@/store/boardStore'
 import { midpoint } from '@/utils/arrowPaths'
 import { straightArrowPath } from '@/utils/arrowPaths'
-import type { Point } from '@/store/types'
+import { useSVGCoordinates } from '@/hooks/useSVGCoordinates'
 
 interface DrawingOverlayProps {
   svgRef: React.RefObject<SVGSVGElement | null>
@@ -20,26 +20,12 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
   const selectArrow     = useBoardStore((s) => s.selectArrow)
   const arrows          = useBoardStore((s) => s.arrows)
   const updateArrowControl = useBoardStore((s) => s.updateArrowControl)
-  const pitchOrientation   = useBoardStore((s) => s.pitchOrientation)
-
-  const isLandscape = pitchOrientation === 'landscape'
-  const VB_W = isLandscape ? 1050 : 680
-  const VB_H = isLandscape ? 680 : 1050
+  const { VB_W, VB_H, toSVG } = useSVGCoordinates(svgRef)
 
   const draggingArrowId = useRef<string | null>(null)
   const [pendingCurveAdjustId, setPendingCurveAdjustId] = useState<string | null>(null)
 
   const resolvedColour = arrowTeam === 'home' ? homeColour : arrowTeam === 'away' ? awayColour : '#ffffff'
-
-  const toSVG = useCallback((clientX: number, clientY: number): Point => {
-    const svg = svgRef.current
-    if (!svg) return { x: 0, y: 0 }
-    const rect = svg.getBoundingClientRect()
-    return {
-      x: (clientX - rect.left) * (VB_W / rect.width),
-      y: (clientY - rect.top)  * (VB_H / rect.height),
-    }
-  }, [svgRef, VB_W, VB_H])
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!drawingState) return
@@ -113,7 +99,7 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
     <g>
       {/* Transparent capture rect */}
       <rect
-        x={0} y={0} width={680} height={1050}
+        x={0} y={0} width={VB_W} height={VB_H}
         fill="transparent"
         style={{ cursor: 'crosshair', pointerEvents: 'all' }}
         onPointerUp={(e) => {

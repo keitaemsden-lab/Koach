@@ -6,6 +6,7 @@ import FormationPicker from '@/components/toolbar/FormationPicker'
 import TeamColourPicker from '@/components/toolbar/TeamColourPicker'
 import UndoRedoButtons from '@/components/toolbar/UndoRedoButtons'
 import ExportButton from '@/components/toolbar/ExportButton'
+import ToolbarButton from '@/components/toolbar/ToolbarButton'
 import { useBoardStore } from '@/store/boardStore'
 
 interface ToolbarProps {
@@ -51,62 +52,31 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
 
       <UndoRedoButtons />
 
-      <button
-        className="hidden md:flex items-center justify-center rounded-lg"
+      <ToolbarButton
+        className="hidden md:flex"
+        icon={<ArrowsHorizontal size={18} weight="light" />}
         title={pitchOrientation === 'portrait' ? 'Switch to landscape' : 'Switch to portrait'}
-        aria-label="Toggle pitch orientation"
+        ariaLabel="Toggle pitch orientation"
         onClick={togglePitchOrientation}
-        style={{
-          width: 36, height: 36, minWidth: 44,
-          background: 'transparent',
-          color: 'rgba(255,255,255,0.55)',
-          borderRadius: 8,
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-      >
-        <ArrowsHorizontal size={18} weight="light" />
-      </button>
+      />
 
       <div className="ml-auto flex items-center gap-1">
         {/* Notes toggle */}
-        <button
+        <ToolbarButton
+          icon={<NoteBlank size={18} weight="light" />}
           title="Toggle notes (N)"
-          aria-label="Toggle notes panel"
+          ariaLabel="Toggle notes panel"
           onClick={toggleNotesPanel}
-          className="flex items-center justify-center rounded-lg transition-colors duration-150"
-          style={{
-            width: 36, height: 36,
-            minWidth: 44, minHeight: 44,
-            background: isNotesPanelOpen ? 'var(--accent)' : 'transparent',
-            color: isNotesPanelOpen ? 'white' : 'rgba(255,255,255,0.55)',
-            cursor: 'pointer',
-            borderRadius: 8,
-            transition: 'background 150ms ease, color 150ms ease',
-          }}
-        >
-          <NoteBlank size={18} weight="light" />
-        </button>
+          isActive={isNotesPanelOpen}
+        />
 
         {/* Save/Load */}
-        <button
+        <ToolbarButton
+          icon={<FloppyDisk size={18} weight="light" />}
           title="Save / Load"
-          aria-label="Save / Load"
+          ariaLabel="Save / Load"
           onClick={toggleSaveLoadModal}
-          className="flex items-center justify-center rounded-lg transition-colors duration-150"
-          style={{
-            width: 36, height: 36,
-            minWidth: 44, minHeight: 44,
-            background: 'transparent',
-            color: 'rgba(255,255,255,0.55)',
-            cursor: 'pointer',
-            borderRadius: 8,
-            transition: 'background 150ms ease, color 150ms ease',
-          }}
-        >
-          <FloppyDisk size={18} weight="light" />
-        </button>
+        />
 
         <ExportButton boardRef={boardRef} />
       </div>
