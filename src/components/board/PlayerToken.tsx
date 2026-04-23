@@ -1,6 +1,5 @@
-import { memo } from 'react'
+import { memo, useCallback, useEffect, useRef } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { useRef } from 'react'
 import type { Player, Mode } from '@/store/types'
 import { lightenColour } from '@/utils/colour'
 import { useSVGCoordinates } from '@/hooks/useSVGCoordinates'
@@ -34,21 +33,55 @@ function PlayerToken({
   const clampedY = isDragging ? Math.max(16, Math.min(VB_H - 16, rawY)) : rawY
 
   const shortName = player.name.length > 8 ? player.name.slice(0, 7) + '…' : player.name
+
   const lastTouchTapTs = useRef(0)
+  const touchPointerDownTs = useRef(0)
+  const prevIsDragging = useRef(false)
+  const nodeRefInternal = useRef<SVGGElement | null>(null)
+
+  // Reset double-tap counter the moment a drag begins so a drag can't accidentally trigger edit
+  if (!prevIsDragging.current && isDragging) {
+    lastTouchTapTs.current = 0
+  }
+  prevIsDragging.current = isDragging
+
+  // Track touch pointer-down time via native listener without interfering with dnd-kit
+  useEffect(() => {
+    const el = nodeRefInternal.current
+    if (!el) return
+    const handler = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') touchPointerDownTs.current = Date.now()
+    }
+    el.addEventListener('pointerdown', handler)
+    return () => el.removeEventListener('pointerdown', handler)
+  }, [])
+
+  // Merged ref: feeds both our internal ref and dnd-kit's setNodeRef
+  const setMergedRef = useCallback((el: SVGGElement | null) => {
+    nodeRefInternal.current = el
+    ;(setNodeRef as (el: SVGGElement | null) => void)(el)
+  }, [setNodeRef])
 
   function maybeHandleDoubleTap(e: React.PointerEvent<SVGGElement>) {
     if (e.pointerType !== 'touch' || mode === 'draw-arrow' || isDragging) return
     const now = Date.now()
-    if (now - lastTouchTapTs.current < 320) {
+    // Ignore long presses and drag attempts — only quick taps (< 250 ms) count toward double-tap
+    if (now - touchPointerDownTs.current > 250) {
+      lastTouchTapTs.current = 0
+      return
+    }
+    if (now - lastTouchTapTs.current < 400) {
       e.stopPropagation()
       onEdit()
+      lastTouchTapTs.current = 0
+    } else {
+      lastTouchTapTs.current = now
     }
-    lastTouchTapTs.current = now
   }
 
   return (
     <g
-      ref={setNodeRef as (el: SVGGElement | null) => void}
+      ref={setMergedRef}
       transform={`translate(${clampedX}, ${clampedY}) ${isDragging ? 'scale(1.15)' : ''}`}
       style={{
         cursor: isDragging ? 'grabbing' : (mode === 'draw-arrow' ? 'crosshair' : 'grab'),

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback } from 'react'
 import { useBoardStore } from '@/store/boardStore'
 import { midpoint } from '@/utils/arrowPaths'
 import { straightArrowPath } from '@/utils/arrowPaths'
@@ -18,12 +18,8 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
   const addArrow        = useBoardStore((s) => s.addArrow)
   const setDrawingState = useBoardStore((s) => s.setDrawingState)
   const selectArrow     = useBoardStore((s) => s.selectArrow)
-  const arrows          = useBoardStore((s) => s.arrows)
-  const updateArrowControl = useBoardStore((s) => s.updateArrowControl)
+  const setMode         = useBoardStore((s) => s.setMode)
   const { VB_W, VB_H, toSVG } = useSVGCoordinates(svgRef)
-
-  const draggingArrowId = useRef<string | null>(null)
-  const [pendingCurveAdjustId, setPendingCurveAdjustId] = useState<string | null>(null)
 
   const resolvedColour = arrowTeam === 'home' ? homeColour : arrowTeam === 'away' ? awayColour : '#ffffff'
 
@@ -53,46 +49,17 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
       teamColour: resolvedColour,
     })
 
-    // Immediately enable curve adjustment for the new arrow
+    // Select the new arrow then switch to select mode so the curve handle appears immediately
     const arrows = useBoardStore.getState().arrows
     const newId = arrows[arrows.length - 1]?.id
-    if (newId) {
-      selectArrow(newId)
-      setPendingCurveAdjustId(newId)
-    }
-
-    setDrawingState(null)
-  }, [mode, drawingState, arrowType, resolvedColour, addArrow, setDrawingState, selectArrow, toSVG])
-
-  const onControlPointerDown = useCallback((e: React.PointerEvent, arrowId: string) => {
-    e.stopPropagation()
-    draggingArrowId.current = arrowId
-    ;(e.currentTarget as SVGElement).setPointerCapture(e.pointerId)
-  }, [])
-
-  const onControlPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!draggingArrowId.current) return
-    updateArrowControl(draggingArrowId.current, toSVG(e.clientX, e.clientY))
-  }, [updateArrowControl, toSVG])
-
-  const onControlPointerUp = useCallback(() => {
-    draggingArrowId.current = null
-    setPendingCurveAdjustId(null)
-  }, [])
+    if (newId) selectArrow(newId)
+    setMode('select')  // also clears drawingState
+  }, [mode, drawingState, arrowType, resolvedColour, addArrow, setDrawingState, selectArrow, setMode, toSVG])
 
   if (mode !== 'draw-arrow') return null
 
-  // Preview arrow
   const previewPath = drawingState
     ? straightArrowPath(drawingState.start, drawingState.currentPointer)
-    : null
-
-  const pendingCurvedArrow = pendingCurveAdjustId
-    ? arrows.find((arrow) => arrow.id === pendingCurveAdjustId && arrow.style === 'curved')
-    : null
-
-  const pendingControlPoint = pendingCurvedArrow
-    ? (pendingCurvedArrow.control ?? midpoint(pendingCurvedArrow.start, pendingCurvedArrow.end))
     : null
 
   return (
@@ -127,21 +94,6 @@ export default function DrawingOverlay({ svgRef }: DrawingOverlayProps) {
           fill="none"
           opacity={0.6}
           style={{ pointerEvents: 'none' }}
-        />
-      )}
-
-      {pendingControlPoint && pendingCurvedArrow && (
-        <circle
-          cx={pendingControlPoint.x}
-          cy={pendingControlPoint.y}
-          r={7}
-          fill="var(--accent)"
-          stroke="white"
-          strokeWidth={2}
-          style={{ cursor: 'grab', touchAction: 'none' }}
-          onPointerDown={(e) => onControlPointerDown(e, pendingCurvedArrow.id)}
-          onPointerMove={onControlPointerMove}
-          onPointerUp={onControlPointerUp}
         />
       )}
     </g>
