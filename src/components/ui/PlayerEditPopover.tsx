@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useBoardStore } from '@/store/boardStore'
 import type { Player, PositionLabel } from '@/store/types'
 
@@ -35,20 +35,29 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
     updatePlayer(player.id, { name, position })
   }
 
+  const applyAndClose = useCallback(() => {
+    applyChanges()
+    selectPlayer(null)
+    onClose()
+  }, [name, position, player.id, updatePlayer, selectPlayer, onClose])
+
   // Close on click outside
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        applyChanges()
-        selectPlayer(null)
-        onClose()
+        applyAndClose()
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  })
+  }, [applyAndClose])
 
   const [coords, setCoords] = useState<{ left: number, top: number } | null>(null)
+
+  const pitchOrientation = useBoardStore((s) => s.pitchOrientation)
+  const isLandscape = pitchOrientation === 'landscape'
+  const VB_W = isLandscape ? 1050 : 680
+  const VB_H = isLandscape ? 680 : 1050
 
   useEffect(() => {
     function updateCoords() {
@@ -58,8 +67,8 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
       const containerRect = svg.parentElement?.getBoundingClientRect()
       if (!svgRect || !containerRect) return
 
-      const scaleX = svgRect.width / 680
-      const scaleY = svgRect.height / 1050
+      const scaleX = svgRect.width / VB_W
+      const scaleY = svgRect.height / VB_H
       const screenX = (svgRect.left - containerRect.left) + player.x * scaleX
       const screenY = (svgRect.top  - containerRect.top)  + player.y * scaleY
 
@@ -88,7 +97,7 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
     updateCoords()
     window.addEventListener('resize', updateCoords)
     return () => window.removeEventListener('resize', updateCoords)
-  }, [svgRef, player.x, player.y])
+  }, [svgRef, player.x, player.y, VB_W, VB_H])
 
   if (!coords) return null
 

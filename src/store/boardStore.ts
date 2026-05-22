@@ -127,11 +127,17 @@ export const useBoardStore = create<BoardStore>()(
         if (!positions) return
         set((s) => {
           const isLandscape = s.pitchOrientation === 'landscape'
+          const vbW = isLandscape ? 1050 : 680
+          const vbH = isLandscape ? 680 : 1050
           const transform = (p: { x: number, y: number }) =>
             isLandscape ? { x: p.y, y: 680 - p.x } : p
+          const clamp = (p: { x: number, y: number }) => ({
+            x: Math.max(10, Math.min(vbW - 10, p.x)),
+            y: Math.max(10, Math.min(vbH - 10, p.y)),
+          })
 
           const homePlayers = s.players.filter((p) => p.team === 'home')
-          let awayPlayers = s.players.filter((p) => p.team === 'away')
+          const awayPlayers = s.players.filter((p) => p.team === 'away')
           
           const newHome: Player[] = positions.map((fp, i) => {
             let y = fp.y
@@ -140,38 +146,40 @@ export const useBoardStore = create<BoardStore>()(
               y = 540 + ((y - 300) / 660) * 420
             }
 
-            const transformed = transform({ x: fp.x, y })
+            const pos = clamp(transform({ x: fp.x, y }))
             return {
               id: homePlayers[i]?.id ?? crypto.randomUUID(),
-              team: 'home',
+              team: 'home' as const,
               position: fp.position,
               name: homePlayers[i]?.name ?? `#${i + 1}`,
-              x: transformed.x,
-              y: transformed.y,
+              x: pos.x,
+              y: pos.y,
             }
           })
 
-          if (ownHalf) {
-            awayPlayers = positions.map((fp, i) => {
+          // Always reposition away team — mirror from formation positions
+          const newAway: Player[] = positions.map((fp, i) => {
+            let y = fp.y
+            if (ownHalf) {
               // Map [300, 960] to [540, 960] for the base shape
-              const y = 540 + ((fp.y - 300) / 660) * 420
-              
-              // Mirror for Away to top half
-              const awayX = 680 - fp.x
-              const awayY = 1050 - y
-              const transformed = transform({ x: awayX, y: awayY })
-              return {
-                id: awayPlayers[i]?.id ?? crypto.randomUUID(),
-                team: 'away',
-                position: fp.position,
-                name: awayPlayers[i]?.name ?? `#${i + 1}`,
-                x: transformed.x,
-                y: transformed.y,
-              }
-            })
-          }
+              y = 540 + ((y - 300) / 660) * 420
+            }
+            
+            // Mirror for Away
+            const awayX = 680 - fp.x
+            const awayY = 1050 - y
+            const pos = clamp(transform({ x: awayX, y: awayY }))
+            return {
+              id: awayPlayers[i]?.id ?? crypto.randomUUID(),
+              team: 'away' as const,
+              position: fp.position,
+              name: awayPlayers[i]?.name ?? `#${i + 1}`,
+              x: pos.x,
+              y: pos.y,
+            }
+          })
 
-          return { players: [...newHome, ...awayPlayers], activeFormation: name }
+          return { players: [...newHome, ...newAway], activeFormation: name }
         })
       },
 
@@ -268,12 +276,17 @@ export const useBoardStore = create<BoardStore>()(
       togglePitchOrientation: () => {
         const current = get().pitchOrientation
         const next = current === 'portrait' ? 'landscape' : 'portrait'
+        const nextW = next === 'landscape' ? 1050 : 680
+        const nextH = next === 'landscape' ? 680 : 1050
 
         const transformPoint = (p: { x: number; y: number }) => {
-          if (current === 'portrait') {
-            return { x: p.y, y: 680 - p.x }
-          } else {
-            return { x: 680 - p.y, y: p.x }
+          const raw = current === 'portrait'
+            ? { x: p.y, y: 680 - p.x }
+            : { x: 680 - p.y, y: p.x }
+          // Clamp to the target viewBox to prevent off-pitch positions
+          return {
+            x: Math.max(10, Math.min(nextW - 10, raw.x)),
+            y: Math.max(10, Math.min(nextH - 10, raw.y)),
           }
         }
 
@@ -314,6 +327,7 @@ export const useBoardStore = create<BoardStore>()(
         homeColour: state.homeColour,
         awayColour: state.awayColour,
       }),
+      limit: 50,
     }
   )
 )
