@@ -1,129 +1,95 @@
-import { memo } from 'react'
+import { memo, useRef } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { useRef } from 'react'
-import type { Player, Mode } from '@/store/types'
-import { lightenColour } from '@/utils/colour'
-import { useSVGCoordinates } from '@/hooks/useSVGCoordinates'
+import type { Player } from '@/store/types'
+import { inkOn, toView } from '@/utils/geometry'
 
 interface PlayerTokenProps {
   player: Player
   colour: string
   isSelected: boolean
-  onSelect: () => void
-  onEdit: () => void
-  svgRef: React.RefObject<SVGSVGElement | null>
-  mode: Mode
+  draggable: boolean
+  land: boolean
+  scale: number
+  showName: boolean
+  onSelect: (id: string) => void
+  onEdit: (id: string) => void
+  onNudge: (id: string, dx: number, dy: number) => void
+}
+
+const KEYS: Record<string, [number, number]> = {
+  ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
 }
 
 function PlayerToken({
-  player, colour, isSelected, onSelect, onEdit, svgRef, mode,
+  player, colour, isSelected, draggable, land, scale, showName, onSelect, onEdit, onNudge,
 }: PlayerTokenProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: player.id,
-    disabled: mode === 'draw-arrow',
+    disabled: !draggable,
   })
+  const lastTap = useRef(0)
 
-  const { VB_W, VB_H, scaleX, scaleY } = useSVGCoordinates(svgRef)
+  const big = scale >= 0.7
+  const rpx = big ? 19 : 13
+  const r = rpx / scale
+  const hit = Math.max(22, rpx + 6) / scale
+  const num = (big ? 15 : 11.5) / scale
+  const nm = 13 / scale
 
-  const dx = transform ? transform.x * scaleX : 0
-  const dy = transform ? transform.y * scaleY : 0
+  const base = toView(player, land)
+  const vx = base.x + (transform ? transform.x / scale : 0)
+  const vy = base.y + (transform ? transform.y / scale : 0)
 
-  const rawX = player.x + dx
-  const rawY = player.y + dy
-  const clampedX = isDragging ? Math.max(16, Math.min(VB_W - 16, rawX)) : rawX
-  const clampedY = isDragging ? Math.max(16, Math.min(VB_H - 16, rawY)) : rawY
-
-  const shortName = player.name.length > 8 ? player.name.slice(0, 7) + '…' : player.name
-  const lastTouchTapTs = useRef(0)
-
-  function maybeHandleDoubleTap(e: React.PointerEvent<SVGGElement>) {
-    if (e.pointerType !== 'touch' || mode === 'draw-arrow' || isDragging) return
-    const now = Date.now()
-    if (now - lastTouchTapTs.current < 320) {
-      e.stopPropagation()
-      onEdit()
-    }
-    lastTouchTapTs.current = now
-  }
+  const label = player.number != null ? String(player.number) : player.position
+  const under = player.name && !/^#\d+$/.test(player.name) ? player.name : player.position
+  const side = player.team === 'home' ? 'Home' : 'Opposition'
+  const aria = `${side} ${player.number ?? ''}${player.name ? ' ' + player.name : ''}, ${player.position}. Arrow keys move.`.replace(/\s+/g, ' ')
 
   return (
     <g
       ref={setNodeRef as (el: SVGGElement | null) => void}
-      transform={`translate(${clampedX}, ${clampedY}) ${isDragging ? 'scale(1.15)' : ''}`}
-      style={{
-        cursor: isDragging ? 'grabbing' : (mode === 'draw-arrow' ? 'crosshair' : 'grab'),
-        filter: isDragging ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))' : undefined,
-        transition: isDragging ? 'none' : 'transform 150ms ease',
-        touchAction: 'none',
-        outline: 'none',
-      }}
-      onClick={(e) => {
-        if (mode === 'draw-arrow') return
-        e.stopPropagation()
-        onSelect()
-      }}
-      onDoubleClick={(e) => {
-        if (mode === 'draw-arrow') return
-        e.stopPropagation()
-        onEdit()
-      }}
-      onPointerUp={maybeHandleDoubleTap}
+      data-player-id={player.id}
+      className={`pl ${player.team}${isSelected ? ' sel' : ''}${isDragging ? ' dragging' : ''}`}
+      style={{ transform: `translate(${vx}px, ${vy}px)` }}
       {...attributes}
-      {...(mode === 'select' ? listeners : {})}
+      {...(draggable ? listeners : {})}
+      role="button"
+      tabIndex={0}
+      aria-label={aria}
+      aria-pressed={isSelected}
+      aria-roledescription="player"
+      onClick={(e) => { if (!draggable) return; e.stopPropagation(); onSelect(player.id) }}
+      onDoubleClick={(e) => { if (!draggable) return; e.stopPropagation(); onEdit(player.id) }}
+      onPointerUp={(e) => {
+        if (e.pointerType !== 'touch' || !draggable || isDragging) return
+        const now = Date.now()
+        if (now - lastTap.current < 320) { e.stopPropagation(); onEdit(player.id) }
+        lastTap.current = now
+      }}
+      onKeyDown={(e) => {
+        const k = KEYS[e.key]
+        if (k && draggable) {
+          e.preventDefault()
+          const step = e.shiftKey ? 50 : 10
+          // keys move on screen; convert the screen direction to pitch units
+          const [sx, sy] = k
+          const d = land ? { x: sy, y: -sx } : { x: sx, y: sy }
+          onNudge(player.id, d.x * step, d.y * step)
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect(player.id)
+        }
+      }}
     >
-      {/* Per-token SVG defs — IDs namespaced to prevent DOM collisions across 22 tokens */}
-      <defs>
-        <radialGradient id={`grad-${player.id}-${colour.replace('#', '')}`} cx="40%" cy="35%" r="65%">
-          <stop offset="0%" stopColor={lightenColour(colour, 0.25)} />
-          <stop offset="100%" stopColor={colour} />
-        </radialGradient>
-        <filter id={`shadow-${player.id}`} x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.4" />
-        </filter>
-        <filter id={`glow-${player.id}-${colour.replace('#', '')}`} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={colour} floodOpacity="0.85" />
-        </filter>
-      </defs>
-
-      {/* Token body — stroke is unconditional; selection is communicated via glow filter only.
-          Drag shadow is handled by the <g> style above — no isDragging branch needed here. */}
-      <circle
-        r={16}
-        fill={`url(#grad-${player.id}-${colour.replace('#', '')})`}
-        stroke="rgba(255,255,255,0.6)"
-        strokeWidth={1.5}
-        filter={isSelected ? `url(#glow-${player.id}-${colour.replace('#', '')})` : `url(#shadow-${player.id})`}
-      />
-
-      {/* Inner shimmer ring */}
-      <circle r={12} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-
-      {/* Position label */}
-      <text
-        fontSize={11}
-        fontWeight={800}
-        fontFamily="Inter, sans-serif"
-        fill="white"
-        textAnchor="middle"
-        dominantBaseline="central"
-        style={{ pointerEvents: 'none', userSelect: 'none' }}
-      >
-        {player.position}
-      </text>
-
-      {/* Player name */}
-      <text
-        y={25}
-        fontSize={9}
-        fontWeight={500}
-        fontFamily="Inter, sans-serif"
-        fill="rgba(255,255,255,0.9)"
-        textAnchor="middle"
-        dominantBaseline="hanging"
-        style={{ pointerEvents: 'none', userSelect: 'none' }}
-      >
-        {shortName}
-      </text>
+      <circle className="hit" r={hit} />
+      <circle className="ring" r={r * 1.75} strokeWidth={2 / scale} />
+      <circle className="tok" r={r} fill={colour} strokeWidth={1.8 / scale} />
+      <text className="num" y={num * 0.36} fontSize={label.length > 2 ? num * 0.8 : num} fill={inkOn(colour)}>{label}</text>
+      {showName && (
+        <text className={'nm' + (under === player.position ? ' posl' : '')} y={r + nm * 1.15} fontSize={nm} strokeWidth={5.5 / scale}>
+          {under.length > 14 ? under.slice(0, 13) + '…' : under}
+        </text>
+      )}
     </g>
   )
 }

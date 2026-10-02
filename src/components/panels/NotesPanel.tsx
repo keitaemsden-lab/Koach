@@ -1,72 +1,44 @@
 import { useBoardStore } from '@/store/boardStore'
+import Sheet from '@/components/ui/Sheet'
 
-const MAX_CHARS = 1000
+export const MAX_CHARS = 1000
 
-export default function NotesPanel() {
-  const isOpen    = useBoardStore((s) => s.isNotesPanelOpen)
-  const notes     = useBoardStore((s) => s.notes)
-  const setNotes  = useBoardStore((s) => s.setNotes)
-
+export function NotesField({ id, autoFocus }: { id: string, autoFocus?: boolean }) {
+  const notes = useBoardStore((s) => s.notes)
+  const setNotes = useBoardStore((s) => s.setNotes)
   return (
-    <>
-      {/* Desktop: side panel */}
-      <aside
-        className="hidden md:flex flex-col flex-shrink-0 overflow-hidden"
-        style={{
-          width: isOpen ? 320 : 0,
-          transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-          background: 'var(--bg-panel)',
-          borderLeft: isOpen ? '1px solid var(--border)' : 'none',
-        }}
-      >
-        {isOpen && <NotesPanelContent notes={notes} setNotes={setNotes} />}
-      </aside>
-
-      {/* Mobile: bottom sheet */}
-      <div
-        className="md:hidden fixed inset-x-0 bottom-0 z-50 flex flex-col"
-        style={{
-          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-          background: 'var(--bg-panel)',
-          borderTop: '1px solid var(--border)',
-          maxHeight: '50vh',
-          paddingBottom: 'calc(56px + env(safe-area-inset-bottom) + 8px)',
-        }}
-      >
-        <div className="flex justify-center pt-2 pb-1">
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)' }} />
-        </div>
-        <NotesPanelContent notes={notes} setNotes={setNotes} />
-      </div>
-    </>
+    <textarea
+      id={id}
+      className="notes"
+      maxLength={MAX_CHARS}
+      rows={6}
+      data-autofocus={autoFocus || undefined}
+      placeholder="What should the squad remember about this move?"
+      value={notes}
+      onChange={(e) => setNotes(e.target.value.slice(0, MAX_CHARS))}
+    />
   )
 }
 
-function NotesPanelContent({ notes, setNotes }: { notes: string; setNotes: (n: string) => void }) {
+export function NotesCount() {
+  const n = useBoardStore((s) => s.notes.length)
+  return <span className="count mono">{n} / {MAX_CHARS}</span>
+}
+
+/** Phone notes: a sheet, mounted only while open so nothing hidden stays focusable. */
+export default function NotesSheet() {
+  const isOpen = useBoardStore((s) => s.isNotesPanelOpen)
+  const setOpen = useBoardStore((s) => s.setNotesPanelOpen)
+  if (!isOpen) return null
   return (
-    <div className="flex flex-col h-full p-4">
-      <p className="text-xs mb-2 font-medium" style={{ color: 'var(--text-secondary)', fontFamily: 'DM Mono, monospace' }}>
-        TACTICAL NOTES
-      </p>
-      <textarea
-        className="flex-1 resize-none outline-none text-xs leading-relaxed"
-        style={{
-          background: 'transparent',
-          color: 'var(--text-primary)',
-          fontFamily: 'DM Mono, monospace',
-          fontSize: 13,
-          border: 'none',
-          minHeight: 120,
-        }}
-        placeholder="Add tactical notes here..."
-        maxLength={MAX_CHARS}
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-      />
-      <p className="text-right mt-1" style={{ color: 'var(--text-secondary)', fontSize: 10, fontFamily: 'DM Mono, monospace' }}>
-        {notes.length} / {MAX_CHARS}
-      </p>
-    </div>
+    <Sheet
+      title="Coaching notes"
+      heading={<label htmlFor="notes-m">Coaching notes</label>}
+      onClose={() => setOpen(false)}
+      closeLabel="Done"
+    >
+      <NotesField id="notes-m" autoFocus />
+      <p className="count mono" style={{ marginTop: 8, marginBottom: 0 }}><NotesCount /></p>
+    </Sheet>
   )
 }

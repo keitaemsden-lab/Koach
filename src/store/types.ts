@@ -31,13 +31,17 @@ export type FormationName =
 
 // ─── Core Entities ──────────────────────────────────────────────────────────
 
+// Coordinates are canonical PORTRAIT pitch units: x 0..680 (touchline to touchline),
+// y 0..1050 (opposition goal line at 0, home goal line at 1050). 10 units = 1 metre.
+// Landscape is a view transform only (see utils/geometry.ts), never stored.
 export type Player = {
   id: string                  // nanoid or crypto.randomUUID()
   team: Team
   position: PositionLabel
-  name: string                // display name, e.g. 'Ronaldo' or '#9'
-  x: number                   // SVG viewBox x coordinate
-  y: number                   // SVG viewBox y coordinate
+  name: string                // display name, e.g. 'Ronaldo'; empty shows the position
+  number?: number             // shirt number shown in the token (optional for legacy boards)
+  x: number
+  y: number
 }
 
 export type Arrow = {
@@ -47,8 +51,12 @@ export type Arrow = {
   start: Point
   end: Point
   control?: Point             // only for curved arrows (bezier control point)
-  teamColour: string          // hex — resolved at draw time from store
+  teamColour: string          // hex, resolved at draw time (kept for legacy boards)
+  team?: ArrowTeam            // whose ink: home, away or neutral
+  fromId?: string             // player the arrow starts on; the start follows that player
 }
+
+export type ArrowTeam = 'home' | 'away' | 'neutral'
 
 
 // ─── Formations ─────────────────────────────────────────────────────────────
@@ -67,7 +75,7 @@ export type Formation = {
 
 // ─── Saved State ─────────────────────────────────────────────────────────────
 
-// Serialisable state — saved to localStorage / URL hash
+// Serialisable state: saved to localStorage / URL hash
 // Excludes all ephemeral UI state
 export type SerializableState = {
   players: Player[]
@@ -75,6 +83,11 @@ export type SerializableState = {
   notes: string
   homeColour: string
   awayColour: string
+  title?: string
+  homeFormation?: FormationName | null
+  awayFormation?: FormationName | null
+  /** 'portrait' marks canonical coordinates. Missing on boards saved before the redesign. */
+  orientation?: 'portrait'
 }
 
 export type SavedFormation = {
@@ -86,12 +99,13 @@ export type SavedFormation = {
 
 // ─── Drawing State (Ephemeral) ───────────────────────────────────────────────
 
-// Tracks in-progress arrow draw — not persisted, not in undo stack
+// Tracks in-progress arrow draw: not persisted, not in undo stack
 export type DrawingState = {
   phase: 'start-placed' | 'drawing'
   start: Point
   currentPointer: Point       // live cursor position for preview
   control?: Point             // bezier control point (curved only)
+  fromId?: string             // player the draw started on
 }
 
 
@@ -109,6 +123,7 @@ export type BoardState = {
   notes: string
   homeColour: string
   awayColour: string
+  title: string
 
   // UI state (not in undo stack)
   selectedPlayerId: string | null
@@ -117,9 +132,13 @@ export type BoardState = {
   isNotesPanelOpen: boolean
   isSaveLoadModalOpen: boolean
   drawingState: DrawingState | null
-  activeFormation: FormationName | null
-  pitchOrientation: 'portrait' | 'landscape'
-  arrowTeam: 'home' | 'away' | 'neutral'
+  activeFormation: FormationName | null      // home shape; null once a player is moved
+  awayFormation: FormationName | null
+  /** Manual pitch orientation; null follows the screen (landscape on wide screens). */
+  orientationPref: 'portrait' | 'landscape' | null
+  arrowTeam: ArrowTeam
+  isMoreOpen: boolean
+  isShapeOpen: boolean
 }
 
 export type BoardActions = {
@@ -146,19 +165,23 @@ export type BoardActions = {
   selectArrow: (id: string | null) => void
 
   // Formations
-  loadFormation: (name: FormationName, ownHalf?: boolean) => void
+  loadFormation: (name: FormationName, ownHalf?: boolean, team?: Team | 'both') => void
 
   // Colours
   setHomeColour: (colour: string) => void
   setAwayColour: (colour: string) => void
 
-  // Notes
+  // Notes and title
   setNotes: (notes: string) => void
+  setTitle: (title: string) => void
 
   // UI toggles
   toggleDarkMode: () => void
   toggleNotesPanel: () => void
   toggleSaveLoadModal: () => void
+  setNotesPanelOpen: (open: boolean) => void
+  setMoreOpen: (open: boolean) => void
+  setShapeOpen: (open: boolean) => void
 
   // Persistence
   saveToLocalStorage: (name: string) => void
@@ -168,18 +191,19 @@ export type BoardActions = {
   loadLastSession: () => void
 
   // Share / Export
-  exportState: () => string
-  importState: (encoded: string) => void
+  exportState: () => Promise<string>
+  importState: (encoded: string) => Promise<void>
 
   // Clear
   clearArrows: () => void
   clearBoard: () => void
 
-  // Orientation
-  togglePitchOrientation: () => void
+  // Orientation (view only)
+  setOrientationPref: (pref: 'portrait' | 'landscape' | null) => void
 
-  // Arrow team colour
-  setArrowTeam: (team: 'home' | 'away' | 'neutral') => void
+  // Arrow ink
+  setArrowTeam: (team: ArrowTeam) => void
+  cycleArrowTeam: () => void
 }
 
 export type BoardStore = BoardState & BoardActions
