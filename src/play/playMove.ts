@@ -205,8 +205,9 @@ async function playMotion(svg: SVGSVGElement, steps: Step[], players: Player[]) 
     if (!ln) return
     const marker = ln.getAttribute('marker-end')
     ln.removeAttribute('marker-end')
+    // hidden until its wipe starts (a round cap would otherwise leave a dot at the far end)
+    ln.style.opacity = '0'
     if (steps[i].arrow.type !== 'pass') { ln.style.strokeDasharray = '1 1'; ln.style.strokeDashoffset = '1' }
-    else ln.style.opacity = '0'
     restoreFns.push(() => {
       if (marker) ln.setAttribute('marker-end', marker)
       ln.style.strokeDasharray = ''; ln.style.strokeDashoffset = ''; ln.style.opacity = ''
@@ -217,7 +218,7 @@ async function playMotion(svg: SVGSVGElement, steps: Step[], players: Player[]) 
     const ln = lines[i]
     await tween(run, WIPE_MS, s.delay, (e) => {
       if (!ln) return
-      if (s.arrow.type !== 'pass') ln.style.strokeDashoffset = String(1 - e)
+      if (s.arrow.type !== 'pass') { ln.style.opacity = ''; ln.style.strokeDashoffset = String(1 - e) }
       else ln.style.opacity = String(e)
       if (e >= 1) { const m = `url(#ah-${s.arrow.team ?? 'home'})`; ln.setAttribute('marker-end', m) }
     })
