@@ -1,42 +1,44 @@
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { useBoardStore } from '@/store/boardStore'
+import { useUI, toast } from '@/store/uiStore'
 import type { SavedFormation } from '@/store/types'
-import Dialog from '@/components/ui/Dialog'
+import Sheet from '@/components/ui/Sheet'
+import { askClearArrows } from '@/components/controls/actions'
 
+/** Saved boards: save under a name (the title by default), open, delete, plus clear and reset. */
 export default function SaveLoadModal() {
-  const isOpen           = useBoardStore((s) => s.isSaveLoadModalOpen)
-  const toggleModal      = useBoardStore((s) => s.toggleSaveLoadModal)
-  const saveToLocal      = useBoardStore((s) => s.saveToLocalStorage)
-  const loadFromLocal    = useBoardStore((s) => s.loadFromLocalStorage)
-  const deleteSave       = useBoardStore((s) => s.deleteSave)
-  const listSaves        = useBoardStore((s) => s.listSaves)
-  const clearArrows      = useBoardStore((s) => s.clearArrows)
-  const clearBoard       = useBoardStore((s) => s.clearBoard)
+  const isOpen        = useBoardStore((s) => s.isSaveLoadModalOpen)
+  const toggleModal   = useBoardStore((s) => s.toggleSaveLoadModal)
+  const saveToLocal   = useBoardStore((s) => s.saveToLocalStorage)
+  const loadFromLocal = useBoardStore((s) => s.loadFromLocalStorage)
+  const deleteSave    = useBoardStore((s) => s.deleteSave)
+  const listSaves     = useBoardStore((s) => s.listSaves)
+  const title         = useBoardStore((s) => s.title)
 
   const [saveName, setSaveName] = useState('')
   const [saves, setSaves] = useState<SavedFormation[]>([])
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [pendingAction, setPendingAction] = useState<'clear-arrows' | 'reset-board' | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
-    const t = setTimeout(() => setSaves(listSaves()), 0)
+    const t = setTimeout(() => { setSaves(listSaves()); setSaveName(useBoardStore.getState().title) }, 0)
     return () => clearTimeout(t)
   }, [isOpen, listSaves])
 
   if (!isOpen) return null
 
   function handleSave() {
-    if (!saveName.trim()) return
-    saveToLocal(saveName.trim())
+    const name = saveName.trim() || title
+    if (!name) return
+    saveToLocal(name)
     setSaves(listSaves())
-    setSaveName('')
+    toast(`Saved "${name}"`)
   }
 
   function handleLoad(name: string) {
     loadFromLocal(name)
     toggleModal()
+    toast(`Opened "${name}"`)
   }
 
   function handleDelete(name: string) {
@@ -46,174 +48,47 @@ export default function SaveLoadModal() {
   }
 
   return (
-    <>
-    <Dialog
-      label="Saves"
-      onClose={toggleModal}
-      closeOnBackdrop
-      overlayClassName="fixed inset-0 flex items-center justify-center z-50"
-      overlayStyle={{ background: 'rgba(0,0,0,0.6)', animation: 'modal-bg-in 200ms ease' }}
-      panelClassName="rounded-xl shadow-2xl w-full max-w-md mx-4 flex flex-col"
-      panelStyle={{
-        maxHeight: '70vh',
-        background: 'var(--bg-panel)',
-        border: '1px solid var(--border)',
-        color: 'var(--text-primary)',
-        fontFamily: 'DM Mono, monospace',
-        animation: 'modal-in 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
-    >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <span className="font-medium text-sm">Saves</span>
-          <button
-            onClick={toggleModal}
-            aria-label="Close"
-            style={{ minWidth: 44, minHeight: 44, color: 'var(--text-secondary)', fontSize: 20, lineHeight: 1, cursor: 'pointer' }}
-          >×</button>
-        </div>
+    <Sheet title="Saves" heading="Saved boards" onClose={toggleModal}>
+      <div className="saverow">
+        <label className="sr-only" htmlFor="save-name">Save name</label>
+        <input
+          id="save-name"
+          placeholder="Name this board"
+          aria-label="Save name"
+          data-autofocus
+          maxLength={80}
+          value={saveName}
+          onChange={(e) => setSaveName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+        />
+        <button className="btn solid" onClick={handleSave}>Save</button>
+      </div>
 
-        {/* Save row */}
-        <div className="flex gap-2 p-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <input
-            className="flex-1 rounded px-3 py-2 text-xs"
-            style={{
-              background: 'var(--bg-app)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
-              fontFamily: 'inherit',
-            }}
-            placeholder="Save name..."
-            aria-label="Save name"
-            data-autofocus
-            value={saveName}
-            onChange={(e) => setSaveName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
-          />
-          <button
-            className="px-4 py-2 rounded text-xs font-medium"
-            style={{ background: 'var(--accent)', color: 'white' }}
-            onClick={handleSave}
-          >
-            Save
-          </button>
-        </div>
+      <ul className="boardlist">
+        {saves.length === 0 && <li className="empty">No saved boards yet. Save this one to start a list.</li>}
+        {saves.slice().reverse().map((s) => {
+          const d = new Date(s.savedAt)
+          return (
+            <li key={s.name}>
+              <span className="bn">{s.name}</span>
+              <span className="bd mono">
+                {d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} {d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })}
+              </span>
+              <button className="btn b-open" onClick={() => handleLoad(s.name)}>Open</button>
+              {confirmDelete === s.name ? (
+                <button className="btn danger b-del" onClick={() => handleDelete(s.name)}>Confirm</button>
+              ) : (
+                <button className="btn quiet b-del" aria-label={`Delete ${s.name}`} onClick={() => setConfirmDelete(s.name)}>Delete</button>
+              )}
+            </li>
+          )
+        })}
+      </ul>
 
-        {/* Footer actions */}
-        <div className="flex gap-2 p-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <button
-            className="flex-1 px-3 py-2 rounded text-xs font-medium"
-            style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer' }}
-            onClick={() => setPendingAction('clear-arrows')}
-          >
-            Clear arrows
-          </button>
-          <button
-            className="flex-1 px-3 py-2 rounded text-xs font-medium"
-            style={{ background: '#dc2626', color: 'white', border: 'none', cursor: 'pointer' }}
-            onClick={() => setPendingAction('reset-board')}
-          >
-            Reset board
-          </button>
-        </div>
-
-        {/* List */}
-        <div className="flex-1 overflow-y-auto p-2">
-          {saves.length === 0 && (
-            <p className="p-4 text-center text-xs" style={{ color: 'var(--text-secondary)' }}>No saves yet</p>
-          )}
-          {saves.slice().reverse().map((s) => (
-            <div
-              key={s.name}
-              className="flex items-center justify-between rounded-lg p-3 mb-1"
-              style={{ background: 'var(--bg-app)' }}
-            >
-              <div>
-                <p className="text-xs font-medium">{s.name}</p>
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  {new Date(s.savedAt).toLocaleDateString()} {new Date(s.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-              <div className="flex gap-1">
-                <button
-                  className="px-2 py-1 rounded text-xs"
-                  style={{ background: 'var(--accent)', color: 'white' }}
-                  onClick={() => handleLoad(s.name)}
-                >
-                  Load
-                </button>
-                {confirmDelete === s.name ? (
-                  <button
-                    className="px-2 py-1 rounded text-xs"
-                    style={{ background: '#dc2626', color: 'white' }}
-                    onClick={() => handleDelete(s.name)}
-                  >
-                    Confirm
-                  </button>
-                ) : (
-                  <button
-                    className="px-2 py-1 rounded text-xs"
-                    style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
-                    onClick={() => setConfirmDelete(s.name)}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-    </Dialog>
-
-    {/* Confirmation portal for Clear arrows / Reset board */}
-    {pendingAction && createPortal(
-      <Dialog
-        label={pendingAction === 'clear-arrows' ? 'Clear arrows' : 'Reset board'}
-        onClose={() => setPendingAction(null)}
-        overlayClassName="fixed inset-0 flex items-center justify-center z-[9999]"
-        overlayStyle={{ background: 'rgba(0,0,0,0.5)' }}
-        panelClassName="rounded-xl p-5 shadow-2xl max-w-xs w-full mx-4 text-sm"
-        panelStyle={{
-          background: 'var(--bg-toolbar)',
-          border: '1px solid var(--border)',
-          color: 'var(--text-primary)',
-          fontFamily: 'DM Mono, monospace',
-        }}
-      >
-        <div>
-          <p className="mb-4">
-            {pendingAction === 'clear-arrows'
-              ? 'Clear all arrows? This cannot be undone.'
-              : 'Reset board to default 4-3-3? All changes will be lost.'}
-          </p>
-          <div className="flex gap-2">
-            <button
-              className="flex-1 py-2 rounded-lg text-xs font-medium"
-              style={{ background: pendingAction === 'reset-board' ? '#dc2626' : 'var(--accent)', color: 'white' }}
-              onClick={() => {
-                if (pendingAction === 'clear-arrows') {
-                  clearArrows()
-                } else {
-                  clearBoard()
-                  toggleModal()
-                }
-                setPendingAction(null)
-              }}
-            >
-              {pendingAction === 'clear-arrows' ? 'Clear' : 'Reset'}
-            </button>
-            <button
-              className="flex-1 py-2 rounded-lg text-xs font-medium"
-              style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
-              onClick={() => setPendingAction(null)}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </Dialog>,
-      document.body
-    )}
-    </>
+      <div className="pair">
+        <button className="btn" onClick={askClearArrows}>Clear arrows</button>
+        <button className="btn danger" onClick={() => useUI.getState().setConfirm('reset-board')}>Reset board</button>
+      </div>
+    </Sheet>
   )
 }

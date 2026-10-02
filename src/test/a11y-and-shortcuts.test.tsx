@@ -1,20 +1,31 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import indexHtml from '../../index.html?raw'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { useState } from 'react'
 import Dialog from '@/components/ui/Dialog'
 import Header from '@/components/layout/Header'
-import NotesPanel from '@/components/panels/NotesPanel'
+import PhoneBar from '@/components/layout/PhoneBar'
+import NotesSheet from '@/components/panels/NotesPanel'
 import SaveLoadModal from '@/components/panels/SaveLoadModal'
-import Toolbar from '@/components/layout/Toolbar'
-import HelpOverlay from '@/components/ui/HelpOverlay'
+import Confirms from '@/components/panels/Confirms'
+import { MoreSheet } from '@/components/panels/SheetsPhone'
+import Kits from '@/components/panels/Kits'
+import ShareFallback from '@/components/ui/ShareFallback'
+import Toast from '@/components/ui/Toast'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useBoardStore } from '@/store/boardStore'
+import { useUI } from '@/store/uiStore'
+import { shareBoard } from '@/utils/share'
+
+const css = readFileSync(resolve(process.cwd(), 'src/styles/index.css'), 'utf8')
 
 function Shortcuts() { useKeyboardShortcuts(); return null }
 
 beforeEach(() => {
-  useBoardStore.setState({ isNotesPanelOpen: false, isSaveLoadModalOpen: false, mode: 'select' })
+  useBoardStore.setState({ isNotesPanelOpen: false, isSaveLoadModalOpen: false, isMoreOpen: false, mode: 'select' })
+  useUI.setState({ confirm: null, shareFallback: null, playPhase: 'idle', toast: null })
 })
 
 describe('Dialog', () => {
@@ -58,30 +69,51 @@ describe('Dialog', () => {
   })
 })
 
-describe('Save / Load modal', () => {
-  it('is a dialog and Escape closes it, even from the name input', () => {
-    useBoardStore.setState({ isSaveLoadModalOpen: true })
+describe('Saved boards sheet', () => {
+  it('is a dialog, starts in the name field with the title, and Escape closes it', () => {
+    useBoardStore.setState({ isSaveLoadModalOpen: true, title: 'Press from the front' })
     render(<SaveLoadModal />)
     expect(screen.getByRole('dialog', { name: 'Saves' })).toHaveAttribute('aria-modal', 'true')
-    const input = screen.getByLabelText('Save name')
+    const input = screen.getByLabelText('Save name') as HTMLInputElement
     expect(document.activeElement).toBe(input)
     fireEvent.keyDown(input, { key: 'Escape' })
     expect(useBoardStore.getState().isSaveLoadModalOpen).toBe(false)
   })
 
-  it('Escape on the confirm dialog closes only the confirm', () => {
+  it('saves and lists a board, then opens it', () => {
     useBoardStore.setState({ isSaveLoadModalOpen: true })
     render(<SaveLoadModal />)
+    const input = screen.getByLabelText('Save name')
+    fireEvent.change(input, { target: { value: 'Corners' } })
+    fireEvent.click(screen.getByText('Save'))
+    expect(screen.getByText('Corners')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Open'))
+    expect(useBoardStore.getState().isSaveLoadModalOpen).toBe(false)
+  })
+
+  it('Escape on the reset confirm closes only the confirm', () => {
+    useBoardStore.setState({ isSaveLoadModalOpen: true })
+    render(<><SaveLoadModal /><Confirms /></>)
     fireEvent.click(screen.getByText('Reset board'))
     const confirm = screen.getByRole('dialog', { name: 'Reset board' })
     fireEvent.keyDown(confirm, { key: 'Escape' })
     expect(screen.queryByRole('dialog', { name: 'Reset board' })).toBeNull()
     expect(useBoardStore.getState().isSaveLoadModalOpen).toBe(true)
   })
+
+  it('reset can be undone', () => {
+    useBoardStore.setState({ title: 'Keep me', notes: 'n' })
+    useUI.setState({ confirm: 'reset-board' })
+    render(<Confirms />)
+    fireEvent.click(screen.getAllByText('Reset board').find((b) => b.tagName === 'BUTTON')!)
+    expect(useBoardStore.getState().title).toBe('Untitled board')
+    act(() => useBoardStore.temporal.getState().undo())
+    expect(useBoardStore.getState().title).toBe('Keep me')
+  })
 })
 
 describe('keyboard shortcuts', () => {
-  it('n toggles the notes panel', () => {
+  it('n toggles the notes sheet on a phone', () => {
     render(<Shortcuts />)
     fireEvent.keyDown(document.body, { key: 'n' })
     expect(useBoardStore.getState().isNotesPanelOpen).toBe(true)
@@ -89,7 +121,7 @@ describe('keyboard shortcuts', () => {
     expect(useBoardStore.getState().isNotesPanelOpen).toBe(false)
   })
 
-  it('n does not fire while typing or inside a dialog', () => {
+  it('shortcuts do not fire while typing or inside a dialog', () => {
     render(<><Shortcuts /><input aria-label="x" /><div role="dialog"><button>b</button></div></>)
     fireEvent.keyDown(screen.getByLabelText('x'), { key: 'n' })
     fireEvent.keyDown(screen.getByText('b'), { key: 'd' })
@@ -97,60 +129,108 @@ describe('keyboard shortcuts', () => {
     expect(useBoardStore.getState().mode).toBe('select')
   })
 
-  it('d and s switch modes', () => {
+  it('d draws, s and v go back to move', () => {
     render(<Shortcuts />)
     fireEvent.keyDown(document.body, { key: 'd' })
     expect(useBoardStore.getState().mode).toBe('draw-arrow')
     fireEvent.keyDown(document.body, { key: 's' })
     expect(useBoardStore.getState().mode).toBe('select')
+    fireEvent.keyDown(document.body, { key: 'd' })
+    fireEvent.keyDown(document.body, { key: 'v' })
+    expect(useBoardStore.getState().mode).toBe('select')
+  })
+
+  it('p with no arrows says what to do instead of failing silently', () => {
+    useBoardStore.setState({ arrows: [] })
+    render(<><Shortcuts /><Toast /></>)
+    fireEvent.keyDown(document.body, { key: 'p' })
+    expect(useUI.getState().toast?.msg).toMatch(/Draw a run first/)
   })
 })
 
-describe('notes panel', () => {
-  it('hidden panels are inert so their textareas cannot take focus', () => {
-    const { container } = render(<NotesPanel />)
-    const sheet = container.querySelector('.md\\:hidden') as HTMLElement
-    expect(sheet.hasAttribute('inert')).toBe(true)
+describe('notes sheet', () => {
+  it('is not in the DOM while closed, so its textarea cannot take focus', () => {
+    render(<NotesSheet />)
+    expect(document.querySelector('textarea')).toBeNull()
     act(() => useBoardStore.setState({ isNotesPanelOpen: true }))
-    expect(sheet.hasAttribute('inert')).toBe(false)
+    expect(screen.getByRole('dialog', { name: 'Coaching notes' })).toBeInTheDocument()
+    expect(document.activeElement?.tagName).toBe('TEXTAREA')
   })
 })
 
-describe('page semantics', () => {
-  it('has exactly one h1', () => {
+describe('page semantics and type', () => {
+  it('has exactly one h1, and it is the editable board title', () => {
+    useBoardStore.setState({ title: 'Build-up v 4-4-2' })
     render(<Header />)
-    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    const h1s = screen.getAllByRole('heading', { level: 1 })
+    expect(h1s).toHaveLength(1)
+    expect(h1s[0].textContent).toBe('Build-up v 4-4-2')
+    expect(h1s[0].getAttribute('contenteditable')).toBe('plaintext-only')
   })
 
-  it('index.html points og:url at koach and loads no external stylesheet', () => {
-    const html = indexHtml
-    expect(html).toContain('<meta property="og:url" content="https://koach.keitaemsden.com"')
-    expect(html).not.toContain('tactics.keitaemsden.com')
-    expect(html).not.toContain('fonts.googleapis.com')
+  it('index.html: koach og:url, en-AU, no external stylesheet or font CDN, Switzer preloaded', () => {
+    expect(indexHtml).toContain('<meta property="og:url" content="https://koach.keitaemsden.com"')
+    expect(indexHtml).toContain('lang="en-AU"')
+    expect(indexHtml).not.toContain('fonts.googleapis.com')
+    expect(indexHtml).toContain('/fonts/switzer-500.woff2')
   })
-})
 
-describe('help card', () => {
-  it('does not sit at the bottom (toolbar zone) and can be dismissed', () => {
-    render(<HelpOverlay />)
-    const card = screen.getByRole('status')
-    expect(card.style.bottom).toBe('')
-    expect(card.style.top).not.toBe('')
-    fireEvent.click(screen.getByText(/Got it/))
-    expect(screen.queryByRole('status')).toBeNull()
-    expect(localStorage.getItem('tactic-board:seen-help')).toBe('1')
+  it('uses self-hosted Switzer and DM Mono, never Inter', () => {
+    expect(css).toMatch(/font-family: "Switzer"; src: url\("\/fonts\/switzer-400\.woff2"\)/)
+    expect(css).toMatch(/font-family: "DM Mono"/)
+    expect(css).not.toMatch(/Inter/)
+    expect(css).not.toMatch(/https?:\/\//)
   })
 })
 
-describe('toolbar', () => {
-  it('wraps instead of hiding controls behind a horizontal scroll', () => {
-    const ref = { current: null }
-    const { container } = render(<Toolbar boardRef={ref} />)
-    const pill = container.querySelector('.toolbar-pill') as HTMLElement
-    expect(pill.style.overflowX).not.toBe('auto')
-    expect(pill.className).toContain('flex-wrap')
-    for (const name of ['Undo', 'Redo', 'Toggle notes panel', 'Save / Load', 'Export as PNG']) {
-      expect(screen.getByLabelText(name)).toBeInTheDocument()
+describe('phone toolbar', () => {
+  it('has six tools and none of them scroll off screen', () => {
+    render(<PhoneBar />)
+    const bar = screen.getByRole('navigation', { name: 'Board tools' })
+    const buttons = bar.querySelectorAll('button')
+    expect(buttons).toHaveLength(6)
+    for (const name of ['Move', 'Draw', 'Play the move', 'Shape', 'Undo', 'More']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
+    // the 60 px rule lives in the stylesheet
+    expect(css).toMatch(/\.tb \{[^}]*min-height: 60px/)
+  })
+
+  it('More holds everything that left the bar', () => {
+    useBoardStore.setState({ isMoreOpen: true })
+    render(<MoreSheet />)
+    for (const name of ['Redo', 'Share link', 'Export PNG', 'Save or open a board', 'Clear arrows', 'Reset board', 'Rotate pitch']) {
+      expect(screen.getByRole('button', { name: new RegExp(name) })).toBeInTheDocument()
+    }
+    expect(screen.getByRole('button', { name: /Coaching notes/ })).toBeInTheDocument()
+  })
+})
+
+describe('kits', () => {
+  it('labels both kits in words, not single letters', () => {
+    render(<Kits />)
+    expect(screen.getByLabelText('Home kit colour')).toBeInTheDocument()
+    expect(screen.getByLabelText('Opposition kit colour')).toBeInTheDocument()
+    expect(screen.getByText('Home kit')).toBeInTheDocument()
+  })
+})
+
+describe('share link', () => {
+  it('copies the link when the clipboard works', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    await shareBoard()
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('#state=v1:'))
+    expect(useUI.getState().toast?.msg).toMatch(/Link copied/)
+  })
+
+  it('shows the link to copy by hand when the clipboard is blocked', async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error('denied'))
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    render(<ShareFallback />)
+    await act(async () => { await shareBoard() })
+    const input = screen.getByLabelText('Board link') as HTMLInputElement
+    expect(input.value).toContain('#state=v1:')
+    expect(screen.getByRole('dialog', { name: 'Share link' })).toBeInTheDocument()
   })
 })

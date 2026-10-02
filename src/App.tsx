@@ -1,14 +1,21 @@
-import { useRef, useEffect } from 'react'
+import { useEffect } from 'react'
 import Header from '@/components/layout/Header'
-import Toolbar from '@/components/layout/Toolbar'
+import ToolStrip from '@/components/layout/ToolStrip'
+import PhoneBar from '@/components/layout/PhoneBar'
+import Dock from '@/components/layout/Dock'
 import BoardCanvas from '@/components/board/BoardCanvas'
-import NotesPanel from '@/components/panels/NotesPanel'
+import MatchSheet from '@/components/panels/MatchSheet'
+import NotesSheet from '@/components/panels/NotesPanel'
 import SaveLoadModal from '@/components/panels/SaveLoadModal'
-import { useBoardStore } from '@/store/boardStore'
+import Confirms from '@/components/panels/Confirms'
+import { ShapeSheet, MoreSheet } from '@/components/panels/SheetsPhone'
+import Toast from '@/components/ui/Toast'
+import ShareFallback from '@/components/ui/ShareFallback'
+import { useBoardStore, serialise, SESSION_KEY } from '@/store/boardStore'
+import { loadInitialBoard } from '@/store/boot'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useURLState } from '@/hooks/useURLState'
-
-const SESSION_KEY = 'tactic-board:last-session'
+import { useIsDesk } from '@/hooks/useMedia'
 
 function useAutoSave() {
   useEffect(() => {
@@ -16,14 +23,7 @@ function useAutoSave() {
     const unsub = useBoardStore.subscribe((state) => {
       clearTimeout(timer)
       timer = setTimeout(() => {
-        const data = {
-          players: state.players,
-          arrows: state.arrows,
-          notes: state.notes,
-          homeColour: state.homeColour,
-          awayColour: state.awayColour,
-        }
-        try { localStorage.setItem(SESSION_KEY, JSON.stringify(data)) } catch { /* ignore */ }
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(serialise(state))) } catch { /* ignore */ }
       }, 500)
     })
     return () => { unsub(); clearTimeout(timer) }
@@ -31,36 +31,34 @@ function useAutoSave() {
 }
 
 export default function App() {
-  const boardRef = useRef<HTMLDivElement>(null)
-  const loadLastSession = useBoardStore((s) => s.loadLastSession)
-
+  const isDesk = useIsDesk()
   useKeyboardShortcuts()
   useURLState()
   useAutoSave()
 
-  // Restore last session on mount (unless URL state was loaded)
-  useEffect(() => {
-    const hash = window.location.hash
-    if (!hash.startsWith('#state=')) {
-      loadLastSession()
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadInitialBoard() }, [])
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ height: '100dvh', backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)', overflow: 'hidden' }}
-    >
+    <div className="app">
+      <a className="skip" href="#pitch">Skip to the pitch</a>
       <Header />
-
-      {/* Main content — Toolbar floats as an absolute pill inside this area */}
-      <main className="relative flex flex-1 overflow-hidden">
-        <BoardCanvas boardRef={boardRef} />
-        <NotesPanel />
-        <Toolbar boardRef={boardRef} />
+      <main className="stage">
+        <section className="board" aria-label="Board">
+          <ToolStrip />
+          <BoardCanvas />
+          {!isDesk && <Dock />}
+        </section>
+        {isDesk && <MatchSheet />}
       </main>
+      <PhoneBar />
 
+      {!isDesk && <NotesSheet />}
+      {!isDesk && <ShapeSheet />}
+      {!isDesk && <MoreSheet />}
       <SaveLoadModal />
+      <Confirms />
+      <ShareFallback />
+      <Toast />
     </div>
   )
 }

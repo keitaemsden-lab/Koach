@@ -3,16 +3,22 @@ import { encodeState, decodeState } from '@/utils/encode'
 import { useBoardStore } from '@/store/boardStore'
 
 describe('encode', () => {
-  it('round-trips board state', () => {
+  it('round-trips board state', async () => {
     const s = useBoardStore.getState()
     const state = { players: s.players, arrows: [], notes: 'hi', homeColour: '#111111', awayColour: '#222222' }
-    const back = decodeState(encodeState(state as never))
+    const back = await decodeState(await encodeState(state as never))
     expect(back).toEqual(state)
   })
 
-  it('still decodes the legacy uncompressed format', () => {
+  it('still decodes the legacy uncompressed format', async () => {
     const legacy = btoa(encodeURIComponent(JSON.stringify({ notes: 'old' })))
-    expect(decodeState(legacy)).toEqual({ notes: 'old' })
+    expect(await decodeState(legacy)).toEqual({ notes: 'old' })
+  })
+
+  it('decodes a v1 link made by the old pako build', async () => {
+    // pako.deflate('{"notes":"pako"}') in base64, captured from the pre-redesign encoder
+    const old = 'v1:eJyrVsrLL0ktVrJSKkjMzleqBQAv2QWP'
+    expect(await decodeState(old)).toEqual({ notes: 'pako' })
   })
 })
 
