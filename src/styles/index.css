@@ -186,6 +186,8 @@ kbd { font: 400 11px var(--mono); color: var(--muted); border: 1px solid var(--l
 /* selection card: a broadcast lower third */
 .sel { display: flex; flex-direction: column; gap: 10px; }
 .sel.on { border-left: 4px solid var(--tele); padding-left: 12px; }
+.sel-top { display: flex; align-items: center; gap: 6px; }
+.sel-top .sel-k { flex: 1; min-width: 0; }
 .sel-k { font-size: 15px; font-weight: 700; }
 .sel-k .mono { color: var(--muted); font-weight: 400; margin-left: 6px; }
 .sel-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
@@ -243,7 +245,7 @@ kbd { font: 400 11px var(--mono); color: var(--muted); border: 1px solid var(--l
   .brand { font-size: 0; gap: 0; min-width: 44px; justify-content: center; }
   .mark { width: 14px; height: 14px; }
   .titlebox { padding-left: 12px; }
-  .title { font-size: 15px; }
+  .title { font-size: 14.5px; letter-spacing: -0.005em; }
   .meta { font-size: 11.5px; }
   .board { padding: 8px; gap: 8px; }
   .pitchwrap { border: 0; }
@@ -260,7 +262,12 @@ kbd { font: 400 11px var(--mono); color: var(--muted); border: 1px solid var(--l
   .tb.play[aria-pressed="true"] { background: var(--bg); color: var(--hi); }
   .backdrop { align-items: flex-end; }
   .sheet, .sheet.narrow { width: 100vw; max-width: 100vw; border-width: 1px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
-  .toast { top: auto; bottom: 84px; }
+  .dock .sel { gap: 6px; }
+  .dock .fld > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .dock .sel-row { flex-wrap: nowrap; }
+  .dock .fld-name { min-width: 0; }
+  .dock .fld-pos { width: 80px; }
+  .dock .fld-n { width: 52px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }

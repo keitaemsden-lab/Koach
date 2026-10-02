@@ -39,12 +39,17 @@ export default function SelectionCard() {
     const side = p.team === 'home' ? 'Home' : 'Opposition'
     return (
       <div className="sel on" aria-live="polite">
-        <p className="sel-k">{side} <span className="mono">{p.position}</span></p>
+        <div className="sel-top">
+          <p className="sel-k">{side} <span className="mono">{p.position}</span></p>
+          <button className="btn quiet" onClick={() => removePlayer(p.id)} disabled={playing} aria-label="Remove player">Remove</button>
+          <button className="btn" onClick={() => selectPlayer(null)}>Done</button>
+        </div>
         <div className="sel-row">
           <label className="fld fld-n"><span>No.</span>
             <input
               key={p.id + ':n'}
               inputMode="numeric"
+              placeholder="No."
               maxLength={2}
               defaultValue={p.number ?? ''}
               onChange={(e) => {
@@ -59,7 +64,7 @@ export default function SelectionCard() {
               ref={nameRef}
               maxLength={14}
               defaultValue={/^#\d+$/.test(p.name) ? '' : p.name}
-              placeholder={p.position}
+              placeholder="Name"
               onChange={(e) => updatePlayer(p.id, { name: e.target.value.slice(0, 14) })}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); selectPlayer(null) } }}
             />
@@ -70,10 +75,6 @@ export default function SelectionCard() {
             </select>
           </label>
         </div>
-        <div className="sel-row">
-          <button className="btn" onClick={() => removePlayer(p.id)} disabled={playing}>Remove player</button>
-          <button className="btn quiet" onClick={() => selectPlayer(null)}>Done</button>
-        </div>
       </div>
     )
   }
@@ -83,12 +84,12 @@ export default function SelectionCard() {
     const who = a.team === 'away' ? 'opposition' : a.team === 'neutral' ? 'chalk' : 'home'
     return (
       <div className="sel on" aria-live="polite">
-        <p className="sel-k">Step <span className="mono">{String(ai + 1).padStart(2, '0')}</span> {a.type}, {who}</p>
-        <p className="hint">{a.type === 'press' ? 'Delete removes it.' : 'Drag the yellow handle to bend it. Delete removes it.'}</p>
-        <div className="sel-row">
-          <button className="btn" onClick={() => removeArrow(a.id)}>Delete arrow</button>
-          <button className="btn quiet" onClick={() => selectArrow(null)}>Done</button>
+        <div className="sel-top">
+          <p className="sel-k">Step <span className="mono">{String(ai + 1).padStart(2, '0')}</span> {a.type}, {who}</p>
+          <button className="btn quiet" onClick={() => removeArrow(a.id)} aria-label="Delete arrow">Delete</button>
+          <button className="btn" onClick={() => selectArrow(null)}>Done</button>
         </div>
+        <p className="hint">{a.type === 'press' ? 'Delete removes it; Undo brings it back.' : 'Drag the yellow handle to bend it.'}</p>
       </div>
     )
   }
