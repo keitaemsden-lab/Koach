@@ -75,7 +75,7 @@ export type Formation = {
 
 // ─── Saved State ─────────────────────────────────────────────────────────────
 
-// Serialisable state — saved to localStorage / URL hash
+// Serialisable state: saved to localStorage / URL hash
 // Excludes all ephemeral UI state
 export type SerializableState = {
   players: Player[]
@@ -99,7 +99,7 @@ export type SavedFormation = {
 
 // ─── Drawing State (Ephemeral) ───────────────────────────────────────────────
 
-// Tracks in-progress arrow draw — not persisted, not in undo stack
+// Tracks in-progress arrow draw: not persisted, not in undo stack
 export type DrawingState = {
   phase: 'start-placed' | 'drawing'
   start: Point
