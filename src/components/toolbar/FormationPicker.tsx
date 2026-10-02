@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useBoardStore } from '@/store/boardStore'
+import Dialog from '@/components/ui/Dialog'
 import type { FormationName } from '@/store/types'
 
 const FORMATIONS: FormationName[] = ['4-3-3', '4-4-2', '4-2-3-1', '3-5-2', '5-3-2', '4-5-1']
@@ -27,7 +28,7 @@ export default function FormationPicker() {
         onChange={(e) => handleSelect(e.target.value as FormationName)}
         className=""
         style={{
-          height: 36,
+          height: 44,
           padding: '0 8px',
           background: 'transparent',
           border: '1px solid rgba(255,255,255,0.15)',
@@ -51,19 +52,20 @@ export default function FormationPicker() {
 
       {/* Confirmation dialog */}
       {pending && createPortal(
-        <div
-          className="fixed inset-0 flex items-center justify-center z-[9999]"
-          style={{ background: 'rgba(0,0,0,0.5)' }}
+        <Dialog
+          label={`Load formation ${pending}`}
+          onClose={() => setPending(null)}
+          overlayClassName="fixed inset-0 flex items-center justify-center z-[9999]"
+          overlayStyle={{ background: 'rgba(0,0,0,0.5)' }}
+          panelClassName="rounded-xl p-5 shadow-2xl max-w-xs w-full mx-4 text-sm"
+          panelStyle={{
+            background: 'var(--bg-toolbar)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-primary)',
+            fontFamily: 'DM Mono, monospace',
+          }}
         >
-          <div
-            className="rounded-xl p-5 shadow-2xl max-w-xs w-full mx-4 text-sm"
-            style={{
-              background: 'var(--bg-toolbar)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
-              fontFamily: 'DM Mono, monospace',
-            }}
-          >
+          <div>
             <p className="mb-4">
               Load <strong>{pending}</strong>? This will reset {ownHalf ? "both teams'" : "home team"} positions.
             </p>
@@ -95,7 +97,7 @@ export default function FormationPicker() {
               </button>
             </div>
           </div>
-        </div>,
+        </Dialog>,
         document.body
       )}
     </div>

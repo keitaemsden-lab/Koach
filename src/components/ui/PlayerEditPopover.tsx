@@ -25,18 +25,10 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
   const [position, setPosition] = useState<PositionLabel>(player.position)
   const popoverRef = useRef<HTMLDivElement>(null)
 
-  // Sync fields when player changes
-  useEffect(() => {
-    setName(player.name)
-    setPosition(player.position)
-  }, [player.id, player.name, player.position])
-
-  function applyChanges() {
-    updatePlayer(player.id, { name, position })
-  }
-
+  // Fields are initialised from the player; the parent remounts this component
+  // (key={player.id}) when a different player is opened.
   const applyAndClose = useCallback(() => {
-    applyChanges()
+    updatePlayer(player.id, { name, position })
     selectPlayer(null)
     onClose()
   }, [name, position, player.id, updatePlayer, selectPlayer, onClose])
@@ -48,9 +40,16 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
         applyAndClose()
       }
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { selectPlayer(null); onClose() }
+    }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [applyAndClose])
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [applyAndClose, selectPlayer, onClose])
 
   const [coords, setCoords] = useState<{ left: number, top: number } | null>(null)
 
@@ -107,6 +106,8 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
   return (
     <div
       ref={popoverRef}
+      role="dialog"
+      aria-label={`Edit player ${player.name}`}
       className="absolute z-50 rounded-lg shadow-xl p-3 w-40"
       style={{
         left: popLeft,
@@ -120,8 +121,9 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
       onClick={(e) => e.stopPropagation()}
     >
       <div className="mb-2">
-        <label className="block mb-1" style={{ color: 'var(--text-secondary)', fontSize: 10 }}>NAME</label>
+        <label htmlFor="player-edit-name" className="block mb-1" style={{ color: 'var(--text-secondary)', fontSize: 10 }}>NAME</label>
         <input
+          id="player-edit-name"
           className="w-full rounded px-2 py-1 text-xs"
           style={{
             background: 'var(--bg-app)',
@@ -132,16 +134,16 @@ export default function PlayerEditPopover({ player, svgRef, onClose }: PlayerEdi
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') { applyChanges(); selectPlayer(null); onClose() }
+            if (e.key === 'Enter') { applyAndClose() }
             if (e.key === 'Escape') { selectPlayer(null); onClose() }
-            e.stopPropagation()
           }}
           autoFocus
         />
       </div>
       <div className="mb-3">
-        <label className="block mb-1" style={{ color: 'var(--text-secondary)', fontSize: 10 }}>POSITION</label>
+        <label htmlFor="player-edit-position" className="block mb-1" style={{ color: 'var(--text-secondary)', fontSize: 10 }}>POSITION</label>
         <select
+          id="player-edit-position"
           className="w-full rounded px-2 py-1 text-xs"
           style={{
             background: 'var(--bg-app)',

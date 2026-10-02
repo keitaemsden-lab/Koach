@@ -19,7 +19,9 @@ export default function ModeToggle() {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    minHeight: 36,
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
   })
 
   return (

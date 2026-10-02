@@ -27,8 +27,8 @@ export default function ToolbarButton({
       disabled={disabled}
       className={`flex items-center justify-center rounded-lg transition-colors duration-150 ${className}`}
       style={{
-        width: 36,
-        height: 36,
+        width: 44,
+        height: 44,
         minWidth: 44,
         background: isActive ? 'var(--accent)' : 'transparent',
         color: disabled ? 'var(--border)' : isActive ? 'white' : 'rgba(255,255,255,0.55)',

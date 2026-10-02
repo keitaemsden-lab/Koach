@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useBoardStore } from '@/store/boardStore'
 import type { SavedFormation } from '@/store/types'
+import Dialog from '@/components/ui/Dialog'
 
 export default function SaveLoadModal() {
   const isOpen           = useBoardStore((s) => s.isSaveLoadModalOpen)
@@ -46,30 +47,29 @@ export default function SaveLoadModal() {
 
   return (
     <>
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ background: 'rgba(0,0,0,0.6)', animation: 'modal-bg-in 200ms ease' }}
-      onClick={toggleModal}
+    <Dialog
+      label="Saves"
+      onClose={toggleModal}
+      closeOnBackdrop
+      overlayClassName="fixed inset-0 flex items-center justify-center z-50"
+      overlayStyle={{ background: 'rgba(0,0,0,0.6)', animation: 'modal-bg-in 200ms ease' }}
+      panelClassName="rounded-xl shadow-2xl w-full max-w-md mx-4 flex flex-col"
+      panelStyle={{
+        maxHeight: '70vh',
+        background: 'var(--bg-panel)',
+        border: '1px solid var(--border)',
+        color: 'var(--text-primary)',
+        fontFamily: 'DM Mono, monospace',
+        animation: 'modal-in 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
     >
-      <div
-        className="rounded-xl shadow-2xl w-full max-w-md mx-4 flex flex-col"
-        style={{
-          maxHeight: '70vh',
-          background: 'var(--bg-panel)',
-          border: '1px solid var(--border)',
-          color: 'var(--text-primary)',
-          fontFamily: 'DM Mono, monospace',
-          animation: 'modal-in 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* Header */}
         <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--border)' }}>
           <span className="font-medium text-sm">Saves</span>
           <button
             onClick={toggleModal}
             aria-label="Close"
-            style={{ color: 'var(--text-secondary)', fontSize: 20, lineHeight: 1, cursor: 'pointer' }}
+            style={{ minWidth: 44, minHeight: 44, color: 'var(--text-secondary)', fontSize: 20, lineHeight: 1, cursor: 'pointer' }}
           >×</button>
         </div>
 
@@ -84,9 +84,11 @@ export default function SaveLoadModal() {
               fontFamily: 'inherit',
             }}
             placeholder="Save name..."
+            aria-label="Save name"
+            data-autofocus
             value={saveName}
             onChange={(e) => setSaveName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); e.stopPropagation() }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
           />
           <button
             className="px-4 py-2 rounded text-xs font-medium"
@@ -161,24 +163,24 @@ export default function SaveLoadModal() {
             </div>
           ))}
         </div>
-      </div>
-    </div>
+    </Dialog>
 
     {/* Confirmation portal for Clear arrows / Reset board */}
     {pendingAction && createPortal(
-      <div
-        className="fixed inset-0 flex items-center justify-center z-[9999]"
-        style={{ background: 'rgba(0,0,0,0.5)' }}
+      <Dialog
+        label={pendingAction === 'clear-arrows' ? 'Clear arrows' : 'Reset board'}
+        onClose={() => setPendingAction(null)}
+        overlayClassName="fixed inset-0 flex items-center justify-center z-[9999]"
+        overlayStyle={{ background: 'rgba(0,0,0,0.5)' }}
+        panelClassName="rounded-xl p-5 shadow-2xl max-w-xs w-full mx-4 text-sm"
+        panelStyle={{
+          background: 'var(--bg-toolbar)',
+          border: '1px solid var(--border)',
+          color: 'var(--text-primary)',
+          fontFamily: 'DM Mono, monospace',
+        }}
       >
-        <div
-          className="rounded-xl p-5 shadow-2xl max-w-xs w-full mx-4 text-sm"
-          style={{
-            background: 'var(--bg-toolbar)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-primary)',
-            fontFamily: 'DM Mono, monospace',
-          }}
-        >
+        <div>
           <p className="mb-4">
             {pendingAction === 'clear-arrows'
               ? 'Clear all arrows? This cannot be undone.'
@@ -209,7 +211,7 @@ export default function SaveLoadModal() {
             </button>
           </div>
         </div>
-      </div>,
+      </Dialog>,
       document.body
     )}
     </>

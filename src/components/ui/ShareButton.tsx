@@ -24,7 +24,7 @@ export default function ShareButton() {
         onClick={handleShare}
       className="flex items-center justify-center gap-1 rounded-lg transition-colors duration-150 px-2"
       style={{
-        height: 36, minWidth: 44,
+        height: 44, minWidth: 44,
         background: copied ? 'var(--accent)' : 'transparent',
         color: copied ? 'white' : 'var(--text-secondary)',
         border: '1px solid var(--border)',

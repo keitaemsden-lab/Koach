@@ -22,33 +22,30 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
 
   return (
     <div
-      className="toolbar-pill absolute z-10 left-1/2 -translate-x-1/2 bottom-5 flex items-center gap-1.5 px-3 [&::-webkit-scrollbar]:hidden"
+      className="toolbar-pill absolute z-[60] md:z-10 left-2 right-2 md:left-1/2 md:right-auto md:w-max md:max-w-[calc(100%-16px)] md:-translate-x-1/2 bottom-2 md:bottom-5 flex flex-wrap items-center justify-center md:justify-start gap-x-1.5 gap-y-0.5 px-3 py-1"
       style={{
-        height: 48,
-        borderRadius: 999,
+        minHeight: 52,
+        borderRadius: 26,
         border: '1px solid rgba(255,255,255,0.1)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.24)',
         background: 'rgba(15, 23, 36, 0.82)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        overflowX: 'auto',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
       }}
     >
       <ModeToggle />
 
-      <div className="w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+      <div className="hidden md:block w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       <ArrowTypePicker />
 
       <FormationPicker />
 
-      <div className="w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+      <div className="hidden md:block w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       <TeamColourPicker />
 
-      <div className="w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+      <div className="hidden md:block w-px self-stretch my-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       <UndoRedoButtons />
 
@@ -60,7 +57,7 @@ export default function Toolbar({ boardRef }: ToolbarProps) {
         onClick={togglePitchOrientation}
       />
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="md:ml-auto flex items-center gap-1">
         {/* Notes toggle */}
         <ToolbarButton
           icon={<NoteBlank size={18} weight="light" />}

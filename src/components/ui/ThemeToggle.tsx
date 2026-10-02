@@ -12,7 +12,7 @@ export default function ThemeToggle() {
       aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
       className="flex items-center justify-center rounded-lg transition-colors duration-150"
       style={{
-        minWidth: 44, minHeight: 44, width: 36, height: 36,
+        minWidth: 44, minHeight: 44, width: 44, height: 44,
         color: 'var(--text-secondary)',
       }}
     >

@@ -17,7 +17,7 @@ export default function TeamColourPicker() {
 
   return (
     <div className="flex items-center gap-2">
-      <label title="Home team colour" className="relative" style={{ cursor: 'pointer' }}>
+      <label title="Home team colour" className="relative flex items-center justify-center" style={{ cursor: 'pointer', minWidth: 44, minHeight: 44 }}>
         <span className="text-xs mr-1" style={{ color: 'var(--text-secondary)', fontFamily: 'DM Mono, monospace' }}>H</span>
         <span
           className="inline-block"
@@ -32,7 +32,7 @@ export default function TeamColourPicker() {
           aria-label="Home team colour"
         />
       </label>
-      <label title="Away team colour" className="relative" style={{ cursor: 'pointer' }}>
+      <label title="Away team colour" className="relative flex items-center justify-center" style={{ cursor: 'pointer', minWidth: 44, minHeight: 44 }}>
         <span className="text-xs mr-1" style={{ color: 'var(--text-secondary)', fontFamily: 'DM Mono, monospace' }}>A</span>
         <span
           className="inline-block"

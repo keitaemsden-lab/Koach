@@ -26,7 +26,7 @@ export default function ExportButton({ boardRef }: ExportButtonProps) {
       disabled={loading}
       className="flex items-center justify-center rounded-lg transition-colors duration-150"
       style={{
-        width: 36, height: 36, minWidth: 44,
+        width: 44, height: 44, minWidth: 44,
         background: 'transparent',
         color: 'rgba(255,255,255,0.55)',
         border: 'none',

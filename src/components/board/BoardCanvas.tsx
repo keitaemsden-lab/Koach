@@ -96,6 +96,7 @@ export default function BoardCanvas({ boardRef }: BoardCanvasProps) {
 
         {selectedPlayer && (
           <PlayerEditPopover
+            key={selectedPlayer.id}
             player={selectedPlayer}
             svgRef={svgRef}
             onClose={closePlayerEditor}

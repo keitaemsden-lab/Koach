@@ -7,14 +7,19 @@ export function useKeyboardShortcuts() {
   const selectPlayer    = useBoardStore((s) => s.selectPlayer)
   const selectArrow     = useBoardStore((s) => s.selectArrow)
   const removeArrow     = useBoardStore((s) => s.removeArrow)
+  const toggleNotesPanel = useBoardStore((s) => s.toggleNotesPanel)
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const isCtrl = e.ctrlKey || e.metaKey
-      const tag = (e.target as HTMLElement)?.tagName
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName
 
       // Don't intercept shortcuts when typing in inputs
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (target?.isContentEditable) return
+      // Dialogs own their keys (Escape, Tab); board shortcuts stay out of them
+      if (target?.closest?.('[role="dialog"]')) return
 
       if (isCtrl && !e.shiftKey && e.key === 'z') {
         e.preventDefault()
@@ -38,10 +43,11 @@ export function useKeyboardShortcuts() {
         if (sid) { removeArrow(sid); return }
       }
       if (!isCtrl && e.key === 'd') { setMode('draw-arrow'); return }
+      if (!isCtrl && !e.altKey && (e.key === 'n' || e.key === 'N')) { toggleNotesPanel(); return }
       if (!isCtrl && e.key === 's') { setMode('select'); return }
     }
 
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [setMode, setDrawingState, selectPlayer, selectArrow, removeArrow])
+  }, [setMode, setDrawingState, selectPlayer, selectArrow, removeArrow, toggleNotesPanel])
 }

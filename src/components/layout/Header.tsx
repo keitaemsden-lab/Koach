@@ -11,7 +11,9 @@ export default function Header() {
         borderBottom: '1px solid var(--border)',
       }}
     >
+      <h1 className="sr-only">Koach, soccer tactic board</h1>
       <span
+        aria-hidden="true"
         className="font-semibold tracking-widest uppercase select-none"
         style={{ fontSize: 13, fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)', letterSpacing: '0.12em' }}
       >

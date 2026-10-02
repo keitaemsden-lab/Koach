@@ -12,6 +12,8 @@ export default function NotesPanel() {
       {/* Desktop: side panel */}
       <aside
         className="hidden md:flex flex-col flex-shrink-0 overflow-hidden"
+        aria-label="Tactical notes"
+        inert={!isOpen}
         style={{
           width: isOpen ? 320 : 0,
           transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -25,13 +27,18 @@ export default function NotesPanel() {
       {/* Mobile: bottom sheet */}
       <div
         className="md:hidden fixed inset-x-0 bottom-0 z-50 flex flex-col"
+        inert={!isOpen}
+        aria-hidden={!isOpen}
         style={{
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+          visibility: isOpen ? 'visible' : 'hidden',
+          transition: isOpen
+            ? 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)'
+            : 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 250ms',
           background: 'var(--bg-panel)',
           borderTop: '1px solid var(--border)',
-          maxHeight: '50vh',
-          paddingBottom: 'calc(56px + env(safe-area-inset-bottom) + 8px)',
+          maxHeight: '60vh',
+          paddingBottom: 'calc(176px + env(safe-area-inset-bottom))',
         }}
       >
         <div className="flex justify-center pt-2 pb-1">
@@ -60,6 +67,7 @@ function NotesPanelContent({ notes, setNotes }: { notes: string; setNotes: (n: s
           minHeight: 120,
         }}
         placeholder="Add tactical notes here..."
+        aria-label="Tactical notes"
         maxLength={MAX_CHARS}
         value={notes}
         onChange={(e) => setNotes(e.target.value)}

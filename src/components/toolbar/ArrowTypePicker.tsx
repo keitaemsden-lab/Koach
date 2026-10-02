@@ -5,7 +5,7 @@ type ArrowTeam = 'home' | 'away' | 'neutral'
 
 const pillButtonStyle = (isActive: boolean): React.CSSProperties => ({
   minWidth: 44,
-  minHeight: 36,
+  minHeight: 44,
   padding: '4px 10px',
   borderRadius: 999,
   background: isActive ? 'var(--accent)' : 'transparent',
@@ -54,24 +54,38 @@ export default function ArrowTypePicker() {
 
 
       {/* Arrow team colour dots */}
-      <div className="flex items-center gap-1 px-1">
+      <div className="flex items-center px-1">
         {(['home', 'away', 'neutral'] as ArrowTeam[]).map((t) => (
           <button
             key={t}
             title={`Arrow colour: ${t}`}
             aria-label={`Arrow colour ${t}`}
             onClick={() => setArrowTeam(t)}
+            aria-pressed={arrowTeam === t}
             style={{
-              width: 14,
-              height: 14,
-              borderRadius: '50%',
-              background: TEAM_COLOURS[t],
-              border: arrowTeam === t ? '2px solid white' : '2px solid rgba(255,255,255,0.3)',
+              width: 44,
+              height: 44,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'transparent',
+              border: 'none',
               cursor: 'pointer',
               padding: 0,
               flexShrink: 0,
             }}
-          />
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: '50%',
+                background: TEAM_COLOURS[t],
+                border: arrowTeam === t ? '2px solid white' : '2px solid rgba(255,255,255,0.3)',
+              }}
+            />
+          </button>
         ))}
       </div>
     </div>
