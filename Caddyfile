@@ -1,0 +1,18 @@
+:80 {
+	root * /usr/share/caddy
+	encode gzip zstd
+	try_files {path} {path}/ /index.html
+	file_server
+	header {
+		Cache-Control "public, max-age=300"
+		-Server
+		Strict-Transport-Security "max-age=15768000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Fonts are self-hosted. img-src allows data: and blob: because the PNG
+		# export rasterises the board SVG through a blob URL with the fonts
+		# embedded as data URLs.
+		Content-Security-Policy "default-src 'self'; style-src 'self'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'"
+	}
+}
